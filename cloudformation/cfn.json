@@ -1,0 +1,289 @@
+{
+    "AWSTemplateFormatVersion":"2010-09-09",
+    "Description":"url-manager",
+    "Parameters":{
+        "KeyName":{
+            "Description":"The EC2 Key Pair to allow SSH access to the instance",
+            "Type":"String",
+            "Default":"composer-team"
+        },
+        "Stage":{
+            "Description":"Environment name",
+            "Type":"String",
+            "AllowedValues":[ "PROD", "CODE", "QA", "TEST", "RELEASE" ],
+            "Default": "PROD"
+        },
+        "GuardianIP": {
+            "Description": "Ip range for the office",
+            "Type": "String",
+            "Default": "77.91.248.0/21"
+        }
+    },
+
+    "Resources":{
+
+        "UrlManagerRole": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "AssumeRolePolicyDocument": {
+                    "Statement": [ {
+                        "Effect": "Allow",
+                        "Principal": {
+                            "Service": [ "ec2.amazonaws.com" ]
+                        },
+                        "Action": [ "sts:AssumeRole" ]
+                    } ]
+                },
+                "Path": "/"
+            }
+        },
+
+        "UrlManagerDescribeEC2Policy" : {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "UrlManagerDescribeEC2Policy",
+                "PolicyDocument": {
+                    "Statement": [ {
+                        "Action": ["EC2:Describe*"],
+                        "Effect": "Allow",
+                        "Resource":"*"
+                    }]
+                },
+                "Roles": [ { "Ref": "UrlManagerRole" } ]
+            }
+        },
+
+        "UrlManagerGetDistributablesPolicy" : {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "UrlManagerGetDistributablesPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [ "s3:GetObject" ],
+                            "Resource": [ "arn:aws:s3:::composer-dist/*" ]
+                        }
+                    ]
+                },
+                "Roles": [ { "Ref": "UrlManagerRole" } ]
+            }
+        },
+
+        "UrlManagerCloudwatchPolicy" : {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "UrlManagerCloudwatchPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": [ "cloudwatch:*" ],
+                            "Resource": "*"
+                        }
+                    ]
+                },
+                "Roles": [ { "Ref": "UrlManagerRole" } ]
+            }
+        },
+
+        "UrlManagerInstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [ {"Ref": "UrlManagerRole"} ]
+            }
+        },
+
+        "SSHSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Allow SSH access from the office",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": {"Ref": "GuardianIP"}
+                    }
+                ]
+            }
+        },
+
+        "AppServerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "composer latency Application servers",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 9000,
+                        "ToPort": 9000,
+                        "CidrIp": {"Ref": "GuardianIP"}
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 9000,
+                        "ToPort": 9000,
+                        "SourceSecurityGroupName": { "Fn::GetAtt": ["UrlManagerLoadBalancer", "SourceSecurityGroup.GroupName"]}
+                    }
+                ]
+            }
+        },
+
+        "LoadBalancerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "url manager application load balancer",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "443",
+                        "ToPort": "443",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+
+        "UrlManagerLoadBalancer" : {
+            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties" : {
+                "AvailabilityZones" : ["eu-west-1a"],
+                "SecurityGroups": [{ "Fn::GetAtt": ["LoadBalancerSecurityGroup", "GroupId"] }],
+                "Listeners" : [ {
+                    "LoadBalancerPort" : "80",
+                    "InstancePort" : "9000",
+                    "Protocol" : "HTTP"
+                } ],
+
+                "HealthCheck" : {
+                    "Target" : "HTTP:9000/management/healthcheck",
+                    "HealthyThreshold" : "2",
+                    "UnhealthyThreshold" : "2",
+                    "Interval" : "10",
+                    "Timeout" : "5"
+                }
+            }
+        },
+
+
+        "AutoscalingGroup":{
+            "Type":"AWS::AutoScaling::AutoScalingGroup",
+            "Properties":{
+                "AvailabilityZones":["eu-west-1a"],
+                "LaunchConfigurationName":{ "Ref":"UrlManagerLaunchConfig" },
+                "MinSize":"1",
+                "MaxSize":"2",
+                "DesiredCapacity": "1",
+                "HealthCheckType" : "ELB",
+                "HealthCheckGracePeriod": 300,
+                "LoadBalancerNames" : [ { "Ref": "UrlManagerLoadBalancer" }],
+                "Tags":[
+                    {
+                        "Key":"Stage",
+                        "Value":{
+                            "Ref":"Stage"
+                        },
+                        "PropagateAtLaunch":"true"
+                    },
+                    {
+                        "Key": "Stack",
+                        "Value": "composer",
+                        "PropagateAtLaunch": "true"
+                    },
+                    {
+                        "Key":"App",
+                        "Value":"latency-dashboard",
+                        "PropagateAtLaunch":"true"
+                    }
+                ]
+            }
+        },
+
+        "UrlManagerLaunchConfig":{
+            "Type":"AWS::AutoScaling::LaunchConfiguration",
+            "Metadata": {
+                "AWS::CloudFormation::Authentication": {
+                    "distributionAuthentication": {
+                        "type": "S3",
+                        "roleName": { "Ref": "UrlManagerRole" },
+                        "buckets": [ "composer-dist" ]
+                    }
+                },
+                "AWS::CloudFormation::Init": {
+                    "config": {
+                        "users": {
+                            "composer": {
+                                "homeDir": "/home/composer"
+                            }
+                        },
+                        "files": {
+                            "/etc/init/composer-latency.conf": {
+                                "source": { "Fn::Join" : ["", [
+                                    "https://s3-eu-west-1.amazonaws.com/composer-dist/composer/",
+                                    { "Ref": "Stage" },
+                                    "/composer-latency/composer-latency.conf"
+                                ]]},
+                                "authentication": "distributionAuthentication"
+                            },
+                            "/home/composer/composer-latency.zip": {
+                                "source": { "Fn::Join" : ["", [
+                                    "https://s3-eu-west-1.amazonaws.com/composer-dist/composer/",
+                                    { "Ref": "Stage" },
+                                    "/composer-latency/composer-latency.zip"
+                                ]]},
+                                "authentication": "distributionAuthentication"
+                            }
+                        }
+                    }
+                }
+            },
+            "Properties":{
+                "KeyName":{ "Ref":"KeyName" },
+                "ImageId":"ami-f4b11183",
+                "SecurityGroups": [
+                    { "Ref": "AppServerSecurityGroup" },
+                    { "Ref": "SSHSecurityGroup" }
+                ],
+                "InstanceType": "t2.micro",
+                "IamInstanceProfile": {"Ref": "UrlManagerInstanceProfile"},
+                "UserData":{
+                    "Fn::Base64":{
+                        "Fn::Join":["", [
+                            "#!/bin/bash -ev\n",
+                            "apt-get -y update\n",
+                            "locale-gen en_GB.UTF-8\n",
+                            "apt-get -y install openjdk-7-jre-headless\n",
+                            "apt-get -y install python-setuptools\n",
+                            "apt-get -y install unzip\n",
+                            "wget -P /root https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz","\n",
+                            "mkdir -p /root/aws-cfn-bootstrap-latest","\n",
+                            "tar xvfz /root/aws-cfn-bootstrap-latest.tar.gz --strip-components=1 -C /root/aws-cfn-bootstrap-latest","\n",
+                            "easy_install /root/aws-cfn-bootstrap-latest/","\n",
+
+                            "cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r ComposerLatencyLaunchConfig ",
+                            "  --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
+
+                            "unzip -d /home/composer /home/composer/composer-latency\n",
+
+                            "mkdir /home/composer/logs\n",
+
+                            "chown -R composer /home/composer\n",
+                            "chgrp -R composer /home/composer\n",
+
+
+                            "start composer-latency\n"
+                        ]]
+                    }
+                }
+            }
+        }
+    }
+}

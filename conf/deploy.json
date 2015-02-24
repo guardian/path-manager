@@ -1,0 +1,24 @@
+{
+    "defaultStacks": ["composer"],
+    "packages":{
+        "rights-feeder":{
+            "type":"autoscaling",
+            "data":{
+                "port":9000,
+                "bucket":"composer-dist",
+                "publicReadAcl": false
+            }
+        }
+    },
+    "recipes":{
+        "default":{
+            "depends" : ["artifactUploadOnly", "deployOnly"]
+        },
+        "deployOnly":{
+            "actionsPerHost": ["url-manager.deploy"]
+        },
+        "artifactUploadOnly":{
+            "actionsBeforeApp": ["url-manager.uploadArtifacts"]
+        }
+    }
+}
