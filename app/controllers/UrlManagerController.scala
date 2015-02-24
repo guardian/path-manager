@@ -51,4 +51,14 @@ object UrlManagerController extends Controller {
     }
   }
 
+  def showDebug = Action {
+    val paths = PathStore.pathRepository.get
+    val currentId = PathStore.identifierSeq.get
+
+    val pathsData = paths.sortBy(_.identifier).map{ p => s"${p.path}\t${p.identifier}\t${p.`type`}\t${p.system}\t"}.mkString("\n")
+
+    Ok(s"current id = $currentId \n\n\n$pathsData")
+    
+  }
+
 }
