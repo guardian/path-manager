@@ -2,6 +2,8 @@
 POST    /registerNewPath                    controllers.UrlManagerController.registerNewPath
 POST    /updateCanonicalPath                controllers.UrlManagerController.updateCanonicalPath
 GET     /debug                              controllers.UrlManagerController.showDebug
+GET     /updateIdSeq                        controllers.UrlManagerController.showIdSeq
+POST    /updateIdSeq                        controllers.UrlManagerController.updateIdSeq
 
 # Management
 GET     /management/healthcheck             controllers.Management.healthCheck

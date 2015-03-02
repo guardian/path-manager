@@ -51,6 +51,21 @@ object UrlManagerController extends Controller {
     }
   }
 
+  def showIdSeq = Action {
+    val currentId = PathStore.identifierSeq.get
+
+    Ok(views.html.Application.updateIdSeq(currentId))
+  }
+
+  def updateIdSeq = Action { request =>
+    val submission = request.body.asFormUrlEncoded.get
+    val newSeqNo = submission("val").map(_.toLong).head
+
+    PathStore.identifierSeq.set(newSeqNo)
+
+    Redirect("/debug")
+  }
+
   def showDebug = Action {
     val paths = PathStore.pathRepository.get
     val currentId = PathStore.identifierSeq.get
@@ -58,7 +73,7 @@ object UrlManagerController extends Controller {
     val pathsData = paths.sortBy(_.identifier).map{ p => s"${p.path}\t${p.identifier}\t${p.`type`}\t${p.system}\t"}.mkString("\n")
 
     Ok(s"current id = $currentId \n\n\n$pathsData")
-    
+
   }
 
 }
