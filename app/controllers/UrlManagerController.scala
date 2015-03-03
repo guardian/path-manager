@@ -51,6 +51,15 @@ object UrlManagerController extends Controller {
     }
   }
 
+  def getPathDetails(path: String, system: String, key: String) = Action {
+    if(KeyService.validRequest(system, key)) {
+      val pathDetails = PathStore.getPathDetails(path)
+      pathDetails map{ p => Ok(p.asJson) } getOrElse( NotFound )
+    } else {
+      Unauthorized("system and key do not match")
+    }
+  }
+
   def showIdSeq = Action {
     val currentId = PathStore.identifierSeq.get
 

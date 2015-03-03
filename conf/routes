@@ -1,6 +1,7 @@
 # Api
 POST    /registerNewPath                    controllers.UrlManagerController.registerNewPath
 POST    /updateCanonicalPath                controllers.UrlManagerController.updateCanonicalPath
+GET     /getPathDetails                     controllers.UrlManagerController.getPathDetails(path: String, system: String, key: String)
 GET     /debug                              controllers.UrlManagerController.showDebug
 GET     /updateIdSeq                        controllers.UrlManagerController.showIdSeq
 POST    /updateIdSeq                        controllers.UrlManagerController.updateIdSeq

@@ -37,6 +37,10 @@ object PathStore {
     }
   }
 
+  def getPathDetails(path: String) = {
+    pathRepository.get().find(_.path == path)
+  }
+
 }
 
 case class PathRecord(path: String, `type`: String, identifier: Long, system: String) {
