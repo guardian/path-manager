@@ -22,6 +22,18 @@ object PathStore {
     }
   }
 
+  def register(path: String, id: Long, system: String) = {
+    if (pathRepository.get.exists{ p => p.path == path && p.identifier != id}) {
+      Left("path already in use")
+    } else {
+      val pathRecord = PathRecord(path, "canonical", id, system)
+      val shortUrlPathRecord = PathRecord("simulatedShort/" + path, "short", id, system)
+
+      pathRepository.set(pathRecord :: (pathRepository.get().filterNot(_.identifier == id)))
+      Right(List(pathRecord, shortUrlPathRecord))
+    }
+  }
+
   def updateCanonical(newPath: String, existingPath: String, id: Long) = {
         
     if (pathRepository.get.exists( rec => rec.path == newPath && rec.identifier != id)) {
