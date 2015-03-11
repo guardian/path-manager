@@ -3,7 +3,7 @@ project/boot/
 
 .idea/
 .idea_modules/
-
+dynamo/
 node_modules/
 
 logs/*
