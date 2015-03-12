@@ -1,8 +1,9 @@
 package controllers
 
+import play.api.Logger
 import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
-import services.{PathStore, KeyService}
+import services.{IdentifierSequence, PathStore, KeyService}
 
 
 object UrlManagerController extends Controller {
@@ -63,10 +64,7 @@ object UrlManagerController extends Controller {
 
       PathStore.updateCanonical(newPath, existingPath, id) match {
         case Left(error) => BadRequest(error)
-        case Right(records) => {
-          val cannonicalJson = records.find(_.`type` == "canonical").map(_.asJson)
-          Ok(Json.obj("canonical" -> cannonicalJson))
-        }
+        case Right(record) => Ok(Json.obj("canonical" -> record.asJson))
       }
     } else {
       Unauthorized("system and key do not match")
@@ -82,8 +80,10 @@ object UrlManagerController extends Controller {
     }
   }
 
+  // debug endpoints...
+
   def showIdSeq = Action {
-    val currentId = PathStore.identifierSeq.get
+    val currentId = IdentifierSequence.getCurrentId
 
     Ok(views.html.Application.updateIdSeq(currentId))
   }
@@ -92,19 +92,14 @@ object UrlManagerController extends Controller {
     val submission = request.body.asFormUrlEncoded.get
     val newSeqNo = submission("val").map(_.toLong).head
 
-    PathStore.identifierSeq.set(newSeqNo)
+    IdentifierSequence.setCurrentId(newSeqNo)
 
     Redirect("/debug")
   }
 
   def showDebug = Action {
-    val paths = PathStore.pathRepository.get
-    val currentId = PathStore.identifierSeq.get
-
-    val pathsData = paths.sortBy(_.identifier).map{ p => s"${p.path}\t${p.identifier}\t${p.`type`}\t${p.system}\t"}.mkString("\n")
-
-    Ok(s"current id = $currentId \n\n\n$pathsData")
-
+    val currentId = IdentifierSequence.getCurrentId
+    Ok(s"current id = $currentId")
   }
 
 }
