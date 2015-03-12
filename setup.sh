@@ -38,7 +38,7 @@ else
 
     pushd $dynamoDir
 
-    nohup java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -port 10005 > /dev/null &
+    nohup java -Djava.library.path=./DynamoDBLocal_lib -jar DynamoDBLocal.jar -port 10005 --sharedDb > /dev/null &
 
     popd
 
