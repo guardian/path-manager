@@ -5,7 +5,7 @@ import play.Play.autoImport._
 import PlayKeys._
 import com.typesafe.sbt.web._
 
-object UrlManagerBuild extends Build {
+object PathManagerBuild extends Build {
 
   val commonSettings =
     Seq(
@@ -20,12 +20,14 @@ object UrlManagerBuild extends Build {
       incOptions := incOptions.value.withNameHashing(nameHashing = true)
     )
 
-  val root = Project("url-manager", file(".")).enablePlugins(play.PlayScala).enablePlugins(SbtWeb)
+  val pathManager = Project("path-manager", file(".")).enablePlugins(play.PlayScala).enablePlugins(SbtWeb)
     .settings(libraryDependencies ++= Seq(
       ws,
       "com.amazonaws" % "aws-java-sdk" % "1.9.23")
-    ).settings(commonSettings ++ playArtifactDistSettings ++ playArtifactSettings: _*)
-    .settings(magentaPackageName := "url-manager")
+    )
+    .settings(commonSettings ++ playArtifactDistSettings ++ playArtifactSettings: _*)
+    .settings(magentaPackageName := "path-manager")
+    .settings(playDefaultPort := 10000)
 
   def playArtifactSettings = Seq(
     ivyXML :=

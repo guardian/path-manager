@@ -1,0 +1,4 @@
+name: pathmanager
+mappings:
+  - prefix: pathmanager
+    port: 10000
