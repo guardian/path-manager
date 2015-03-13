@@ -6,7 +6,7 @@ import play.api.mvc.{Action, Controller}
 import services.{IdentifierSequence, PathStore}
 
 
-object UrlManagerController extends Controller {
+object PathManagerController extends Controller {
 
   def registerNewPath = Action { request =>
     val submission = request.body.asFormUrlEncoded.get

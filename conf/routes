@@ -1,11 +1,11 @@
 # Api
-POST    /registerNewPath                    controllers.UrlManagerController.registerNewPath
-POST    /registerPath                       controllers.UrlManagerController.registerPath
-POST    /updateCanonicalPath                controllers.UrlManagerController.updateCanonicalPath
-GET     /getPathDetails                     controllers.UrlManagerController.getPathDetails(path: String)
-GET     /debug                              controllers.UrlManagerController.showDebug
-GET     /updateIdSeq                        controllers.UrlManagerController.showIdSeq
-POST    /updateIdSeq                        controllers.UrlManagerController.updateIdSeq
+POST    /registerNewPath                    controllers.PathManagerController.registerNewPath
+POST    /registerPath                       controllers.PathManagerController.registerPath
+POST    /updateCanonicalPath                controllers.PathManagerController.updateCanonicalPath
+GET     /getPathDetails                     controllers.PathManagerController.getPathDetails(path: String)
+GET     /debug                              controllers.PathManagerController.showDebug
+GET     /updateIdSeq                        controllers.PathManagerController.showIdSeq
+POST    /updateIdSeq                        controllers.PathManagerController.updateIdSeq
 
 # Management
 GET     /management/healthcheck             controllers.Management.healthCheck
