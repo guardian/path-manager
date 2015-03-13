@@ -1,7 +1,7 @@
 {
     "defaultStacks": ["composer"],
     "packages":{
-        "rights-feeder":{
+        "path-manager":{
             "type":"autoscaling",
             "data":{
                 "port":9000,
@@ -15,10 +15,10 @@
             "depends" : ["artifactUploadOnly", "deployOnly"]
         },
         "deployOnly":{
-            "actionsPerHost": ["url-manager.deploy"]
+            "actionsPerHost": ["path-manager.deploy"]
         },
         "artifactUploadOnly":{
-            "actionsBeforeApp": ["url-manager.uploadArtifacts"]
+            "actionsBeforeApp": ["path-manager.uploadArtifacts"]
         }
     }
 }
