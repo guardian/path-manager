@@ -1,7 +1,7 @@
 Path Manager
 ============
 
-Service that manages path for a domain. Ensures they are unique etc.
+Service that manages paths for a domain. Ensures they are unique etc.
 
 Rationale
 =========
