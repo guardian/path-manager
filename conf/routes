@@ -2,7 +2,7 @@
 POST    /registerNewPath                    controllers.UrlManagerController.registerNewPath
 POST    /registerPath                       controllers.UrlManagerController.registerPath
 POST    /updateCanonicalPath                controllers.UrlManagerController.updateCanonicalPath
-GET     /getPathDetails                     controllers.UrlManagerController.getPathDetails(path: String, system: String, key: String)
+GET     /getPathDetails                     controllers.UrlManagerController.getPathDetails(path: String)
 GET     /debug                              controllers.UrlManagerController.showDebug
 GET     /updateIdSeq                        controllers.UrlManagerController.showIdSeq
 POST    /updateIdSeq                        controllers.UrlManagerController.updateIdSeq
