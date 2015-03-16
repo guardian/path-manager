@@ -239,7 +239,7 @@
                         "IpProtocol": "tcp",
                         "FromPort": "22",
                         "ToPort": "22",
-                        "CidrIp": {"Ref": "GuardianIP"}
+                        "CidrIp": "0.0.0.0/0"
                     }
                 ]
             }
