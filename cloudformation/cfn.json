@@ -371,7 +371,7 @@
                                 "source": { "Fn::Join" : ["", [
                                     "https://s3-eu-west-1.amazonaws.com/composer-dist/composer/",
                                     { "Ref": "Stage" },
-                                    "/path-manager/path-manager.zip"
+                                    "/path-manager/path-manager.tgz"
                                 ]]},
                                 "authentication": "distributionAuthentication"
                             }
