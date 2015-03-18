@@ -152,7 +152,7 @@
         "PathManagerDynamoPolicy" : {
             "Type": "AWS::IAM::Policy",
             "Properties": {
-                "PolicyName": "PathManagerDescribeEC2Policy",
+                "PolicyName": "PathManagerDynamoEC2Policy",
                 "PolicyDocument": {
                     "Statement": [ {
                         "Action": ["dynamodb:*"],
@@ -172,10 +172,10 @@
             }
         },
 
-        "PathManagerDescribeEC2Policy" : {
+        "PathManagerDescribePolicy" : {
             "Type": "AWS::IAM::Policy",
             "Properties": {
-                "PolicyName": "PathManagerDescribeEC2Policy",
+                "PolicyName": "PathManagerDescribePolicy",
                 "PolicyDocument": {
                     "Statement": [ {
                         "Action": ["EC2:Describe*"],
