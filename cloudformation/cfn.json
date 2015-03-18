@@ -273,22 +273,22 @@
                 "GroupDescription": "path manager application load balancer",
                 "VpcId": {"Ref": "VpcId"},
                 "SecurityGroupIngress": [
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": "443",
-                        "ToPort": "443",
-                        "CidrIp": "0.0.0.0/0"
-                    }
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.251.206/31" },
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.252.206/31" },
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.251.220/31" },
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.72.146.251/32" },
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.55.123/32" },
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.66.109/32" }
                 ]
             }
         },
 
-        "PathManagerLoadBalancer" : {
+        "PublicPathManagerLoadBalancer" : {
             "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties" : {
                 "SecurityGroups": [{ "Fn::GetAtt": ["LoadBalancerSecurityGroup", "GroupId"] }],
                 "CrossZone": true,
-                "Subnets": {"Ref": "PrivateVpcSubnets"},
+                "Subnets": {"Ref": "PublicVpcSubnets"},
                 "Listeners" : [ {
                     "LoadBalancerPort": "443",
                     "InstancePort": "9000",
@@ -318,7 +318,7 @@
                 "DesiredCapacity": "1",
                 "HealthCheckType" : "ELB",
                 "HealthCheckGracePeriod": 300,
-                "LoadBalancerNames" : [ { "Ref": "PathManagerLoadBalancer" }],
+                "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }],
                 "Tags":[
                     {
                         "Key":"Stage",
