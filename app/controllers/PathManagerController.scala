@@ -1,7 +1,7 @@
 package controllers
 
 import play.api.Logger
-import play.api.libs.json.Json
+import play.api.libs.json.{JsValue, Json}
 import play.api.mvc.{Action, Controller}
 import services.{IdentifierSequence, PathStore}
 
@@ -16,9 +16,9 @@ object PathManagerController extends Controller {
     PathStore.registerNew(path, system) match {
       case Left(error) => BadRequest(error)
       case Right(records) => {
-        val cannonicalJson = records.find(_.`type` == "canonical").map(_.asJson)
-        val shortJson = records.find(_.`type` == "short").map(_.asJson)
-        Ok(Json.obj("canonical" -> cannonicalJson, "short" -> shortJson))
+        val cannonical = records.find(_.`type` == "canonical")
+        val short = records.find(_.`type` == "short")
+        Ok(Json.obj("canonical" -> cannonical, "short" -> short))
       }
     }
   }
@@ -33,9 +33,9 @@ object PathManagerController extends Controller {
     PathStore.register(path, id, system) match {
       case Left(error) => BadRequest(error)
       case Right(records) => {
-        val cannonicalJson = records.find(_.`type` == "canonical").map(_.asJson)
-        val shortJson = records.find(_.`type` == "short").map(_.asJson)
-        Ok(Json.obj("canonical" -> cannonicalJson, "short" -> shortJson))
+        val cannonical = records.find(_.`type` == "canonical")
+        val short = records.find(_.`type` == "short")
+        Ok(Json.obj("canonical" -> cannonical, "short" -> short))
       }
     }
   }
@@ -50,13 +50,22 @@ object PathManagerController extends Controller {
 
     PathStore.updateCanonical(newPath, existingPath, id) match {
       case Left(error) => BadRequest(error)
-      case Right(record) => Ok(Json.obj("canonical" -> record.asJson))
+      case Right(record) => Ok(Json.obj("canonical" -> record))
     }
   }
 
   def getPathDetails(path: String) = Action {
     val pathDetails = PathStore.getPathDetails(path)
-    pathDetails map{ p => Ok(p.asJson) } getOrElse( NotFound )
+    pathDetails map{ p => Ok(Json.toJson(p)) } getOrElse( NotFound )
+  }
+
+  def getPathsById(id: Long) = Action {
+    val paths = PathStore.getPathsById(id)
+    if (paths.isEmpty) {
+      NotFound
+    } else {
+      argoOk(Json.toJson(paths))
+    }
   }
 
   // debug endpoints...
@@ -80,5 +89,7 @@ object PathManagerController extends Controller {
     val currentId = IdentifierSequence.getCurrentId
     Ok(s"current id = $currentId")
   }
+
+  def argoOk(json: JsValue) = Ok(Json.obj("data" -> json)).as("application/vnd.argo+json")
 
 }
