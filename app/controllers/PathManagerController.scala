@@ -56,7 +56,12 @@ object PathManagerController extends Controller {
 
   def getPathDetails(path: String) = Action {
     val pathDetails = PathStore.getPathDetails(path)
-    pathDetails map{ p => Ok(Json.toJson(p)) } getOrElse( NotFound )
+    val pathsByType = pathDetails.groupBy(_.`type`)
+    if(pathsByType.isEmpty) {
+      NotFound
+    } else {
+      argoOk(Json.toJson(pathsByType))
+    }
   }
 
   def getPathsById(id: Long) = Action {
