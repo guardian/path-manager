@@ -15,40 +15,41 @@ Operations
 
 The path manager exposes the following operations:
 
-/registerNewPath
-----------------
+Register a new path
+-------------------
 
-Accepts a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
+To register a new path issue a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
 requested iff the the path is not currently in use. An id is also generated for to identify the object that the path links to,
 this id should be stored in the calling system for future operations (this is stored as the pageId in R2 and composer,
 replacing the previous pageId sequence in oracle).
 
-If successful this operation will return a JSON response with the paths registered, These are indexed by path type.
+If successful this operation will return an argo JSON response with the paths registered, These are indexed by path type.
 
 example:
 
 ```
-    curl --data "path=foo/bar/baz&system=test" https://pathmanager.local.dev-gutools.co.uk/registerNewPath
+    curl --data "path=foo/bar/baz&system=test" https://pathmanager.local.dev-gutools.co.uk/paths
 ```
 
 returns
 
 ```
-    {
-    "canonical":
-      {
-      "path":"foo/bar/baz",
-      "identifier":2000051,
-      "type":"canonical",
-      "system":"test"
-      },
-    "short":
-      {
-      "path":"simulatedShort/foo/bar/baz",
-      "identifier":2000051,
-      "type":"short",
-      "system":"test"
-      }
+    {data: 
+        {"canonical":
+            [{
+            "path":"foo/bar/baz",
+            "identifier":2000051,
+            "type":"canonical",
+            "system":"test"
+            }],
+        "short":
+            [{
+            "path":"simulatedShort/foo/bar/baz",
+            "identifier":2000051,
+            "type":"short",
+            "system":"test"
+            }]
+        }
     }
 ```
 

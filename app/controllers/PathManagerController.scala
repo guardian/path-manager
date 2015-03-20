@@ -15,11 +15,7 @@ object PathManagerController extends Controller {
 
     PathStore.registerNew(path, system) match {
       case Left(error) => BadRequest(error)
-      case Right(records) => {
-        val cannonical = records.find(_.`type` == "canonical")
-        val short = records.find(_.`type` == "short")
-        Ok(Json.obj("canonical" -> cannonical, "short" -> short))
-      }
+      case Right(records) => { argoOk(Json.toJson(records)) }
     }
   }
 

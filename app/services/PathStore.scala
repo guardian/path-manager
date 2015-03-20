@@ -20,7 +20,7 @@ object PathStore {
 
         Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
 
-        Right(List(pathRecord, shortUrlPathRecord))
+        Right(List(pathRecord, shortUrlPathRecord).groupBy(_.`type`))
       }
     }
   }
