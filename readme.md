@@ -71,7 +71,7 @@ To register an existing path issue a PUT request to ```/paths/<id>``` with the p
     }
 ```
 
-If successful this operation will return a JSON response with the paths registered, These are indexed by path type.
+If successful this operation will return an argo response with the paths registered, These are indexed by path type.
 
 example:
 
@@ -82,9 +82,22 @@ example:
 returns
 
 ```
-    {
-    "canonical": {"path":"foo/bar/baz1","identifier":345,"type":"canonical","system":"test"},
-    "short":{"path":"simulatedShort/foo/bar/baz1","identifier":345,"type":"short","system":"test"}
+    {data: 
+        {"canonical":
+            [{
+            "path":"foo/bar/baz1",
+            "identifier":345,
+            "type":"canonical",
+            "system":"test"
+            }],
+        "short":
+            [{
+            "path":"simulatedShort/foo/bar/baz1",
+            "identifier":345,
+            "type":"short",
+            "system":"test"
+            }]
+        }
     }
 ```
 
