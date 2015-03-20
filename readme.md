@@ -102,27 +102,46 @@ returns
 ```
 
 
-/getPathDetails
----------------
+Looking up paths
+----------------
 
-This endpoint is used to find the details of a given path. This endpoint accepts a GET request with a ```path``` parameter
-in the querystring. If the path is registerd then the record is returned as JSON, it the path is not registered then a 
-404 response is returned.
-
-This endpoint can be used to check if a path will be available before attempting to register or update, if the path is
-in use then you can take measures to uniquify your path before registering
+Paths can be looked up by id or searched by path. To lookup by id issue a GET request to ```/paths/<id>``` this will return and argo json response
+with all the paths registered for that id 
 
 example:
 
 ```
-    curl https://pathmanager.local.dev-gutools.co.uk/getPathDetails?path=foo/bar/hux
+    curl https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
 
 ```
-    {"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}
+    {"data":{
+        "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}],
+        "short":[{"path":"/simulatedShort/345","identifier":345,"type":"short","system":"test"}]    
+    }}
 ```
+
+To find what is registered on a given path issue a get request to ```paths``` with a ```path=``` query string parameter. This will respond
+with an argo json response in the same format as the id lookup, however only one path record will be included (matching the requested path, obviously)
+
+example:
+
+```
+    curl https://pathmanager.local.dev-gutools.co.uk/paths?path=foo/bar/hux
+```
+
+returns
+
+```
+    {"data":{
+        "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}]   
+    }}
+```
+
+If a path is not found then the endpoint will respond with a 404 response. The lookup endpoints also support HEAD requests which can be used to 
+check if a path is in use (by checking if the response is a 404 or 200).
 
 Not supported yet
 =================
