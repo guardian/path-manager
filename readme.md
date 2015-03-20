@@ -166,12 +166,29 @@ returns
 If a path is not found then the endpoint will respond with a 404 response. The lookup endpoints also support HEAD requests which can be used to 
 check if a path is in use (by checking if the response is a 404 or 200).
 
+
+Deleting all paths for an item
+------------------------------
+
+To delete all path records for an item issue a DELETE request to ```/paths/<id>```. This will result is a 204, no content, response if successful.
+
+This endpoint will delete the canonical path, the short path and any future path records associated with the is.
+
+example:
+
+```
+    curl -i -XDELETE https://pathmanager.local.dev-gutools.co.uk/paths/345
+```
+
+will respond with a 204
+
+
+
 Not supported yet
 =================
 
 The path manager does not currently support:
 
-* deleting paths - This will be implemented alongside the clients.
 * bulk import of paths - This will be implented once the system is running and trickle migration is active
 * short url generation - There is currently a nod towards this but it's all smoke and mirrors
 * redirects - These may be added at a later date once the work on canonical paths is completed.

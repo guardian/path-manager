@@ -48,6 +48,11 @@ object PathManagerController extends Controller {
     }
   }
 
+  def deleteRecord(id: Long) = Action {
+    PathStore.deleteRecord(id)
+    NoContent
+  }
+
   def getPathDetails(path: String) = Action {
     val pathDetails = PathStore.getPathDetails(path)
     val pathsByType = pathDetails.groupBy(_.`type`)

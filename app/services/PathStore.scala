@@ -75,6 +75,13 @@ object PathStore {
     }
   }
 
+  def deleteRecord(id: Long) = {
+    val pathItems = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id))
+    pathItems foreach { item =>
+      Dynamo.pathsTable.deleteItem("path", item.getString("path"))
+    }
+  }
+
   def getPathDetails(path: String) = {
     Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
   }
