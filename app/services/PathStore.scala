@@ -25,19 +25,27 @@ object PathStore {
     }
   }
 
-  def register(path: String, id: Long, system: String) = {
+  def register(proposedPathRecord: PathRecord) = {
 
-    val existingPath = Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
+    val id = proposedPathRecord.identifier
+    val existingPath = Option(Dynamo.pathsTable.getItem("path", proposedPathRecord.path)).map(PathRecord(_))
+    val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
+    val existingCanonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
     existingPath match {
       case Some(pr) if (pr.identifier != id) => Left("path already in use")
       case _ => {
-        val pathRecord = PathRecord(path, id, "canonical", system)
-        val shortUrlPathRecord = PathRecord("simulatedShort/" + path, id, "short", system)
+        val shortUrlPathRecord = PathRecord("simulatedShort/" + proposedPathRecord.path, id, "short", proposedPathRecord.system)
 
-        Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
+        for (oldCanonical <- existingCanonicalPathForId) {
+          if (oldCanonical.path != proposedPathRecord.path) {
+            Dynamo.pathsTable.deleteItem("path", oldCanonical.path)
+          }
+        }
 
-        Right(List(pathRecord, shortUrlPathRecord))
+        Dynamo.pathsTable.putItem(proposedPathRecord.asDynamoItem)
+
+        Right(List(proposedPathRecord, shortUrlPathRecord).groupBy(_.`type`))
       }
     }
   }

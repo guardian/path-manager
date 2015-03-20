@@ -54,21 +54,29 @@ returns
 ```
 
 
-/registerPath
--------------
+Add (or update) an existing path
+--------------------------------
 
-This endpoint is used to migrate paths from existing systems, like the /registerNewPath endpoint it registers a path but 
-this version also accepts a user supplied identifier which is used rather than generating a new id.
+This endpoint is used to migrate paths from existing systems, like the register new operation it registers a path but 
+this version uses the identifier provided by the client rather than generating a new id.
 
-Accepts a POST request with ```path```, ```identifier``` and ```system``` parameters. This operation will create a new path entry for the path
-requested iff the the path is not currently in use. The user supplied numeric id for to identify the object that the path links to.
+To register an existing path issue a PUT request to ```/paths/<id>``` with the path record data as json in the body:
+
+```
+    {
+        "path":"<path>",
+        "identifier":<id>,
+        "type":"canonical", // canonical paths can be registered currently
+        "system":"<system>"
+    }
+```
 
 If successful this operation will return a JSON response with the paths registered, These are indexed by path type.
 
 example:
 
 ```
-    curl --data "path=foo/bar/baz1&identifier=345&system=test" https://pathmanager.local.dev-gutools.co.uk/registerPath
+    curl -i -XPUT -H"Content-Type: application/json" -d '{"path":"foo/bar/baz1","identifier":345,"type":"canonical","system":"test"}' https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
