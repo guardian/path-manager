@@ -42,7 +42,7 @@ object PathStore {
     }
   }
 
-  def updateCanonical(newPath: String, existingPath: String, id: Long) = {
+  def updateCanonical(newPath: String, id: Long) = {
 
     val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
     val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
@@ -50,18 +50,19 @@ object PathStore {
 
     if(newPathRecord.exists(_.identifier != id)) {
       Left("path already in use")
-    } else if (canonicalPathForId.exists(_.path != existingPath)) {
-      Left(s"$existingPath is not owned by $id")
     } else {
       canonicalPathForId.map { existingRecord: PathRecord =>
-        if (existingPath != newPath) {
-          val newRecord = existingRecord.copy(path = newPath)
-          Dynamo.pathsTable.deleteItem("path", existingPath)
-          Dynamo.pathsTable.putItem(newRecord.asDynamoItem)
-          newRecord
-        } else {
-          existingRecord
-        }
+
+        val existingPath = existingRecord.path
+        val updatedRecord = if (existingPath != newPath) {
+            val newRecord = existingRecord.copy(path = newPath)
+            Dynamo.pathsTable.deleteItem("path", existingPath)
+            Dynamo.pathsTable.putItem(newRecord.asDynamoItem)
+            newRecord
+          } else {
+            existingRecord
+          }
+        List(updatedRecord).groupBy(_.`type`)
       }.toRight(s"unable to find canonical record for $id")
     }
   }

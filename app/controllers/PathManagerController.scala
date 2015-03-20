@@ -36,17 +36,15 @@ object PathManagerController extends Controller {
     }
   }
 
-  def updateCanonicalPath = Action { request =>
+  def updateCanonicalPath(id: Long) = Action { request =>
 
     val submission = request.body.asFormUrlEncoded.get
     val newPath = submission("newPath").head
-    val existingPath = submission("existingPath").head
-    val id = submission("identifier").head.toLong
 
 
-    PathStore.updateCanonical(newPath, existingPath, id) match {
+    PathStore.updateCanonical(newPath, id) match {
       case Left(error) => BadRequest(error)
-      case Right(record) => Ok(Json.obj("canonical" -> record))
+      case Right(record) => Ok(Json.toJson(record))
     }
   }
 

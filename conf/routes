@@ -5,7 +5,7 @@ GET     /paths                              controllers.PathManagerController.ge
 
 POST    /paths                              controllers.PathManagerController.registerNewPath
 POST    /registerPath                       controllers.PathManagerController.registerPath
-POST    /updateCanonicalPath                controllers.PathManagerController.updateCanonicalPath
+POST    /paths/:id                          controllers.PathManagerController.updateCanonicalPath(id: Long)
 
 GET     /debug                              controllers.PathManagerController.showDebug
 GET     /updateIdSeq                        controllers.PathManagerController.showIdSeq

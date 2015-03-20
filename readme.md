@@ -81,25 +81,26 @@ returns
 ```
 
 
-/updateCanonicalPath
---------------------
+Update a canonical path
+----------------------
 
-This endpoint is used to update the path that an item is on. It accepts a POST request with ```newPath```, ```existingPath```
-and ```identifier``` parameters. If the new path is available and the existing path corresponds to the provided identifier
-then the old path entry is removed and the new record with the new path is inserted.
+To update a canonical path for an item issue a POST request to ```/paths/<id>``` with ```newPath``` parameter.
+If the new path is available then the old path entry is removed and the new record with the new path is inserted.
 
-If successful this operation will return a JSON response with the path record
+If successful this operation will return a argo json response with the updated canonical path record
 
 example:
 
 ```
-    curl --data "newPath=foo/bar/hux&existingPath=foo/bar/baz1&identifier=345" https://pathmanager.local.dev-gutools.co.uk/updateCanonicalPath
+    curl --data "newPath=foo/bar/hux" https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
 
 ```
-    {"canonical":{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}}
+    {"data":{
+            "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}]
+    }}
 ```
 
 
@@ -124,7 +125,7 @@ returns
     }}
 ```
 
-To find what is registered on a given path issue a get request to ```paths``` with a ```path=``` query string parameter. This will respond
+To find what is registered on a given path issue a get request to ```/paths``` with a ```path=``` query string parameter. This will respond
 with an argo json response in the same format as the id lookup, however only one path record will be included (matching the requested path, obviously)
 
 example:
