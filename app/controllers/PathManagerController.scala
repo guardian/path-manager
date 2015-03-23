@@ -40,7 +40,7 @@ object PathManagerController extends Controller {
   def updateCanonicalPath(id: Long) = Action { request =>
 
     val submission = request.body.asFormUrlEncoded.get
-    val newPath = submission("newPath").head
+    val newPath = submission("path").head
 
     PathStore.updateCanonical(newPath, id) match {
       case Left(error) => BadRequest(error)

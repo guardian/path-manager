@@ -82,7 +82,7 @@ example:
 returns
 
 ```
-    {data: 
+    {"data": 
         {"canonical":
             [{
             "path":"foo/bar/baz1",
@@ -105,7 +105,7 @@ returns
 Update a canonical path
 ----------------------
 
-To update a canonical path for an item issue a POST request to ```/paths/<id>``` with ```newPath``` parameter.
+To update a canonical path for an item issue a POST request to ```/paths/<id>``` with ```path``` parameter.
 If the new path is available then the old path entry is removed and the new record with the new path is inserted.
 
 If successful this operation will return a argo json response with the updated canonical path record
@@ -113,7 +113,7 @@ If successful this operation will return a argo json response with the updated c
 example:
 
 ```
-    curl --data "newPath=foo/bar/hux" https://pathmanager.local.dev-gutools.co.uk/paths/345
+    curl --data "path=foo/bar/hux" https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
