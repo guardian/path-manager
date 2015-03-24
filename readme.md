@@ -15,121 +15,180 @@ Operations
 
 The path manager exposes the following operations:
 
-/registerNewPath
-----------------
+Register a new path
+-------------------
 
-Accepts a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
+To register a new path issue a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
 requested iff the the path is not currently in use. An id is also generated for to identify the object that the path links to,
 this id should be stored in the calling system for future operations (this is stored as the pageId in R2 and composer,
 replacing the previous pageId sequence in oracle).
 
-If successful this operation will return a JSON response with the paths registered, These are indexed by path type.
+If successful this operation will return an argo JSON response with the paths registered, These are indexed by path type.
 
 example:
 
 ```
-    curl --data "path=foo/bar/baz&system=test" https://pathmanager.local.dev-gutools.co.uk/registerNewPath
+    curl --data "path=foo/bar/baz&system=test" https://pathmanager.local.dev-gutools.co.uk/paths
 ```
 
 returns
 
 ```
-    {
-    "canonical":
-      {
-      "path":"foo/bar/baz",
-      "identifier":2000051,
-      "type":"canonical",
-      "system":"test"
-      },
-    "short":
-      {
-      "path":"simulatedShort/foo/bar/baz",
-      "identifier":2000051,
-      "type":"short",
-      "system":"test"
-      }
+    {data: 
+        {"canonical":
+            [{
+            "path":"foo/bar/baz",
+            "identifier":2000051,
+            "type":"canonical",
+            "system":"test"
+            }],
+        "short":
+            [{
+            "path":"simulatedShort/foo/bar/baz",
+            "identifier":2000051,
+            "type":"short",
+            "system":"test"
+            }]
+        }
     }
 ```
 
 
-/registerPath
--------------
+Add (or update) an existing path
+--------------------------------
 
-This endpoint is used to migrate paths from existing systems, like the /registerNewPath endpoint it registers a path but 
-this version also accepts a user supplied identifier which is used rather than generating a new id.
+This endpoint is used to migrate paths from existing systems, like the register new operation it registers a path but 
+this version uses the identifier provided by the client rather than generating a new id.
 
-Accepts a POST request with ```path```, ```identifier``` and ```system``` parameters. This operation will create a new path entry for the path
-requested iff the the path is not currently in use. The user supplied numeric id for to identify the object that the path links to.
+To register an existing path issue a PUT request to ```/paths/<id>``` with the path record data as json in the body:
 
-If successful this operation will return a JSON response with the paths registered, These are indexed by path type.
+```
+    {
+        "path":"<path>",
+        "identifier":<id>,
+        "type":"canonical", // canonical paths can be registered currently
+        "system":"<system>"
+    }
+```
+
+If successful this operation will return an argo response with the paths registered, These are indexed by path type.
 
 example:
 
 ```
-    curl --data "path=foo/bar/baz1&identifier=345&system=test" https://pathmanager.local.dev-gutools.co.uk/registerPath
+    curl -i -XPUT -H"Content-Type: application/json" -d '{"path":"foo/bar/baz1","identifier":345,"type":"canonical","system":"test"}' https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
 
 ```
-    {
-    "canonical": {"path":"foo/bar/baz1","identifier":345,"type":"canonical","system":"test"},
-    "short":{"path":"simulatedShort/foo/bar/baz1","identifier":345,"type":"short","system":"test"}
+    {"data": 
+        {"canonical":
+            [{
+            "path":"foo/bar/baz1",
+            "identifier":345,
+            "type":"canonical",
+            "system":"test"
+            }],
+        "short":
+            [{
+            "path":"simulatedShort/foo/bar/baz1",
+            "identifier":345,
+            "type":"short",
+            "system":"test"
+            }]
+        }
     }
 ```
 
 
-/updateCanonicalPath
---------------------
+Update a canonical path
+----------------------
 
-This endpoint is used to update the path that an item is on. It accepts a POST request with ```newPath```, ```existingPath```
-and ```identifier``` parameters. If the new path is available and the existing path corresponds to the provided identifier
-then the old path entry is removed and the new record with the new path is inserted.
+To update a canonical path for an item issue a POST request to ```/paths/<id>``` with ```path``` parameter.
+If the new path is available then the old path entry is removed and the new record with the new path is inserted.
 
-If successful this operation will return a JSON response with the path record
+If successful this operation will return a argo json response with the updated canonical path record
 
 example:
 
 ```
-    curl --data "newPath=foo/bar/hux&existingPath=foo/bar/baz1&identifier=345" https://pathmanager.local.dev-gutools.co.uk/updateCanonicalPath
+    curl --data "path=foo/bar/hux" https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
 
 ```
-    {"canonical":{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}}
+    {"data":{
+            "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}]
+    }}
 ```
 
 
-/getPathDetails
----------------
+Looking up paths
+----------------
 
-This endpoint is used to find the details of a given path. This endpoint accepts a GET request with a ```path``` parameter
-in the querystring. If the path is registerd then the record is returned as JSON, it the path is not registered then a 
-404 response is returned.
-
-This endpoint can be used to check if a path will be available before attempting to register or update, if the path is
-in use then you can take measures to uniquify your path before registering
+Paths can be looked up by id or searched by path. To lookup by id issue a GET request to ```/paths/<id>``` this will return and argo json response
+with all the paths registered for that id 
 
 example:
 
 ```
-    curl https://pathmanager.local.dev-gutools.co.uk/getPathDetails?path=foo/bar/hux
+    curl https://pathmanager.local.dev-gutools.co.uk/paths/345
 ```
 
 returns
 
 ```
-    {"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}
+    {"data":{
+        "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}],
+        "short":[{"path":"/simulatedShort/345","identifier":345,"type":"short","system":"test"}]    
+    }}
 ```
+
+To find what is registered on a given path issue a get request to ```/paths``` with a ```path=``` query string parameter. This will respond
+with an argo json response in the same format as the id lookup, however only one path record will be included (matching the requested path, obviously)
+
+example:
+
+```
+    curl https://pathmanager.local.dev-gutools.co.uk/paths?path=foo/bar/hux
+```
+
+returns
+
+```
+    {"data":{
+        "canonical":[{"path":"foo/bar/hux","identifier":345,"type":"canonical","system":"test"}]   
+    }}
+```
+
+If a path is not found then the endpoint will respond with a 404 response. The lookup endpoints also support HEAD requests which can be used to 
+check if a path is in use (by checking if the response is a 404 or 200).
+
+
+Deleting all paths for an item
+------------------------------
+
+To delete all path records for an item issue a DELETE request to ```/paths/<id>```. This will result is a 204, no content, response if successful.
+
+This endpoint will delete the canonical path, the short path and any future path records associated with the is.
+
+example:
+
+```
+    curl -i -XDELETE https://pathmanager.local.dev-gutools.co.uk/paths/345
+```
+
+will respond with a 204
+
+
 
 Not supported yet
 =================
 
 The path manager does not currently support:
 
-* deleting paths - This will be implemented alongside the clients.
 * bulk import of paths - This will be implented once the system is running and trickle migration is active
 * short url generation - There is currently a nod towards this but it's all smoke and mirrors
 * redirects - These may be added at a later date once the work on canonical paths is completed.

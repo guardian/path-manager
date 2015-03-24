@@ -1,9 +1,9 @@
 package services
 
+import model.PathRecord
 import play.api.Logger
 import scala.collection.JavaConversions._
 import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, KeyAttribute, RangeKeyCondition, Item}
-import play.api.libs.json.Json
 
 object PathStore {
 
@@ -15,34 +15,42 @@ object PathStore {
       case Some(_) => Left("path already in use")
       case None => {
         val id = IdentifierSequence.getNextId
-        val pathRecord = PathRecord(path, "canonical", id, system)
-        val shortUrlPathRecord = PathRecord("simulatedShort/" + path, "short", id, system)
+        val pathRecord = PathRecord(path, id, "canonical", system)
+        val shortUrlPathRecord = PathRecord("simulatedShort/" + path, id, "short", system)
 
         Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
 
-        Right(List(pathRecord, shortUrlPathRecord))
+        Right(List(pathRecord, shortUrlPathRecord).groupBy(_.`type`))
       }
     }
   }
 
-  def register(path: String, id: Long, system: String) = {
+  def register(proposedPathRecord: PathRecord) = {
 
-    val existingPath = Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
+    val id = proposedPathRecord.identifier
+    val existingPath = Option(Dynamo.pathsTable.getItem("path", proposedPathRecord.path)).map(PathRecord(_))
+    val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
+    val existingCanonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
     existingPath match {
       case Some(pr) if (pr.identifier != id) => Left("path already in use")
       case _ => {
-        val pathRecord = PathRecord(path, "canonical", id, system)
-        val shortUrlPathRecord = PathRecord("simulatedShort/" + path, "short", id, system)
+        val shortUrlPathRecord = PathRecord("simulatedShort/" + proposedPathRecord.path, id, "short", proposedPathRecord.system)
 
-        Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
+        for (oldCanonical <- existingCanonicalPathForId) {
+          if (oldCanonical.path != proposedPathRecord.path) {
+            Dynamo.pathsTable.deleteItem("path", oldCanonical.path)
+          }
+        }
 
-        Right(List(pathRecord, shortUrlPathRecord))
+        Dynamo.pathsTable.putItem(proposedPathRecord.asDynamoItem)
+
+        Right(List(proposedPathRecord, shortUrlPathRecord).groupBy(_.`type`))
       }
     }
   }
 
-  def updateCanonical(newPath: String, existingPath: String, id: Long) = {
+  def updateCanonical(newPath: String, id: Long) = {
 
     val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
     val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
@@ -50,47 +58,37 @@ object PathStore {
 
     if(newPathRecord.exists(_.identifier != id)) {
       Left("path already in use")
-    } else if (canonicalPathForId.exists(_.path != existingPath)) {
-      Left(s"$existingPath is not owned by $id")
     } else {
       canonicalPathForId.map { existingRecord: PathRecord =>
-        if (existingPath != newPath) {
-          val newRecord = existingRecord.copy(path = newPath)
-          Dynamo.pathsTable.deleteItem("path", existingPath)
-          Dynamo.pathsTable.putItem(newRecord.asDynamoItem)
-          newRecord
-        } else {
-          existingRecord
-        }
+
+        val existingPath = existingRecord.path
+        val updatedRecord = if (existingPath != newPath) {
+            val newRecord = existingRecord.copy(path = newPath)
+            Dynamo.pathsTable.deleteItem("path", existingPath)
+            Dynamo.pathsTable.putItem(newRecord.asDynamoItem)
+            newRecord
+          } else {
+            existingRecord
+          }
+        List(updatedRecord).groupBy(_.`type`)
       }.toRight(s"unable to find canonical record for $id")
+    }
+  }
+
+  def deleteRecord(id: Long) = {
+    val pathItems = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id))
+    pathItems foreach { item =>
+      Dynamo.pathsTable.deleteItem("path", item.getString("path"))
     }
   }
 
   def getPathDetails(path: String) = {
     Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
   }
-}
 
-object PathRecord {
-  def apply(item: Item): PathRecord = PathRecord(
-    path = item.getString("path"),
-    `type` = item.getString("type"),
-    identifier = item.getLong("identifier"),
-    system = item.getString("system")
-  )
-}
-
-case class PathRecord(path: String, `type`: String, identifier: Long, system: String) {
-  def asJson = Json.obj(
-    "path" -> path,
-    "identifier" -> identifier,
-    "type" -> `type`,
-    "system" -> system
-  )
-
-  def asDynamoItem = new Item()
-    .withString("path", path)
-    .withLong("identifier", identifier)
-    .withString("type", `type`)
-    .withString("system", system)
+  def getPathsById(id: Long) = {
+    val pathItems = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id))
+    val paths = pathItems.map{ PathRecord(_) }
+    paths.groupBy(_.`type`)
+  }
 }
