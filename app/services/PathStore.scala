@@ -16,9 +16,10 @@ object PathStore {
       case None => {
         val id = IdentifierSequence.getNextId
         val pathRecord = PathRecord(path, id, "canonical", system)
-        val shortUrlPathRecord = PathRecord("simulatedShort/" + path, id, "short", system)
+        val shortUrlPathRecord = PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", system)
 
         Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
+        Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
 
         Right(List(pathRecord, shortUrlPathRecord).groupBy(_.`type`))
       }
@@ -35,11 +36,16 @@ object PathStore {
     existingPath match {
       case Some(pr) if (pr.identifier != id) => Left("path already in use")
       case _ => {
-        val shortUrlPathRecord = PathRecord("simulatedShort/" + proposedPathRecord.path, id, "short", proposedPathRecord.system)
+        val shortUrlPathRecord = PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", proposedPathRecord.system)
 
-        for (oldCanonical <- existingCanonicalPathForId) {
-          if (oldCanonical.path != proposedPathRecord.path) {
-            Dynamo.pathsTable.deleteItem("path", oldCanonical.path)
+        existingCanonicalPathForId match {
+          case Some(oldCanonical) => {
+            if (oldCanonical.path != proposedPathRecord.path) {
+              Dynamo.pathsTable.deleteItem("path", oldCanonical.path)
+            }
+          }
+          case None => {
+            Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
           }
         }
 

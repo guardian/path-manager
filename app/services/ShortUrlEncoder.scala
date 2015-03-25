@@ -7,6 +7,8 @@ object ShortUrlEncoder {
   private val UNSAFE_CHARS: String = "1lo0i"
   private val SAFE_CHARS: String = "xyzvt"
 
+  def generateShortUrlPath(pageId: Long) = "p/" + encodePageIdToPathCode(pageId)
+
   def encodePageIdToPathCode(pageId: Long) = {
     typographicallyEncode(base27encode(pageId))
   }
