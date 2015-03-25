@@ -278,7 +278,14 @@
                     { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.251.220/31" },
                     { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.72.146.251/32" },
                     { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.55.123/32" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.66.109/32" }
+                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.66.109/32" },
+
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.251.206/31" },
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.252.206/31" },
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.251.220/31" },
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.72.146.251/32" },
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.154.55.123/32" },
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.154.66.109/32" }
                 ]
             }
         },
