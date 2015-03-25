@@ -9,7 +9,9 @@ version := "1.0"
 
 libraryDependencies ++= Seq(
   ws,
-  "com.amazonaws" % "aws-java-sdk" % "1.9.23"
+  "com.amazonaws" % "aws-java-sdk" % "1.9.23",
+  "org.apache.commons" % "commons-lang3" % "3.3.2",
+  "org.scalatestplus" %% "play" % "1.1.0" % "test"
 )
 
 lazy val mainProject = project.in(file("."))
@@ -23,5 +25,6 @@ lazy val mainProject = project.in(file("."))
     scalaVersion := "2.11.4",
     scalaVersion in ThisBuild := "2.11.4",
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-Xfatal-warnings"),
-    doc in Compile <<= target.map(_ / "none")
+    doc in Compile <<= target.map(_ / "none"),
+    fork in Test := false
   )
