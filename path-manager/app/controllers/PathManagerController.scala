@@ -31,9 +31,11 @@ object PathManagerController extends Controller {
     request.body.asJson.map(_.as[PathRecord]).map { submission =>
       if (id != submission.identifier) {
         PathOperationErrors.increment
+        Logger.warn("registerExistingPath failed, identifier in url and body do not match")
         BadRequest("identifier in url and body do not match")
       } else if (submission.`type` != "canonical") {
         PathOperationErrors.increment
+        Logger.warn("registerExistingPath failed, only canonical paths can be updated at present")
         BadRequest("only canonical paths can be updated at present")
       } else {
         PathStore.register(submission) match {
@@ -46,6 +48,7 @@ object PathManagerController extends Controller {
       }
     } getOrElse{
       PathOperationErrors.increment
+      Logger.warn("registerExistingPath failed, unable to parse PathRecord from request body")
       BadRequest("unable to parse PathRecord from request body")
     }
   }
