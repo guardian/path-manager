@@ -8,3 +8,5 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-web" % "1.0.0")
 addSbtPlugin("com.eed3si9n" % "sbt-buildinfo" % "0.3.2")
 
 addSbtPlugin("com.gu" % "riffraff-artifact" % "0.6")
+
+addSbtPlugin("com.eed3si9n" %% "sbt-assembly" % "0.12.0")
