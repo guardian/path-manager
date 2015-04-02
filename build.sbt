@@ -44,9 +44,11 @@ lazy val migrator = project.in(file("migrator"))
   .enablePlugins(RiffRaffArtifact)
   .settings(
     name := "migrator",
-    name in Universal := normalizedName.value,
     mainClass in assembly := Some("com.gu.pathmanager.Migrator"),
+    assemblyJarName in assembly := "migrator.jar",
     riffRaffPackageType := assembly.value,
+    riffRaffArtifactFile := "migrator.zip",
+    riffRaffArtifactPublishPath := "migrator",
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-java-sdk" % "1.9.23",
       "org.apache.commons" % "commons-lang3" % "3.3.2"
