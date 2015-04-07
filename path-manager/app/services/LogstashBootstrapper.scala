@@ -25,7 +25,7 @@ object LogstashBootstrapper extends AwsInstanceTags {
 
       val encoder = new LogstashEncoder()
       encoder.setContext(context)
-      encoder.setCustomFields(s"""{"stack":"$stack"},{"app":"$app"},{"stage":"$stage"}""")
+      encoder.setCustomFields(s"""{"stack":"$stack","app":"$app","stage":"$stage"}""")
       encoder.start()
 
       val appender = new LogstashTcpSocketAppender()
