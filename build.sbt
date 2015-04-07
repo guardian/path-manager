@@ -36,6 +36,7 @@ lazy val pathManager = project.in(file("path-manager"))
       ws,
       "com.amazonaws" % "aws-java-sdk" % "1.9.23",
       "org.apache.commons" % "commons-lang3" % "3.3.2",
+      "net.logstash.logback" % "logstash-logback-encoder" % "4.2",
       "org.scalatestplus" %% "play" % "1.1.0" % "test"
     )
   )
