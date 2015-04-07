@@ -1,5 +1,6 @@
 package services
 
+import ch.qos.logback.core.util.Duration
 import play.api.{Logger, LoggerLike}
 import play.api.Play.current
 import ch.qos.logback.classic.{Logger => LogbackLogger, LoggerContext}
@@ -33,6 +34,7 @@ object LogstashBootstrapper extends AwsInstanceTags {
       appender.setEncoder(encoder)
       appender.setRemoteHost(logstashHost)
       appender.setPort(logstashPort)
+      appender.setKeepAliveDuration(Duration.buildBySeconds(30.0))
       appender.start()
 
 
