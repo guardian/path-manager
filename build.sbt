@@ -50,6 +50,7 @@ lazy val migrator = project.in(file("migrator"))
     riffRaffPackageType := assembly.value,
     riffRaffArtifactFile := "migrator.zip",
     riffRaffArtifactPublishPath := "migrator",
+    resolvers += "Guardian Third-party Nexus" at "http://nexus.gudev.gnl:8081/nexus/content/repositories/thirdparty/", // for the oracle driver, because oracle are stupid
     libraryDependencies ++= Seq(
       "com.amazonaws" % "aws-java-sdk" % "1.9.23",
       "org.apache.commons" % "commons-lang3" % "3.3.2",
