@@ -1,6 +1,6 @@
 package com.gu.pathmanager
 
-import com.amazonaws.services.dynamodbv2.document.{RangeKeyCondition, KeyAttribute}
+import com.amazonaws.services.dynamodbv2.document.{Item, RangeKeyCondition, KeyAttribute}
 import scala.collection.JavaConversions._
 
 object MigrationPathStore {
@@ -39,6 +39,15 @@ object MigrationPathStore {
 
       }
     }
+  }
+
+
+  def getCurrentSeqValue: Long = {
+    Dynamo.sequenceTable.getItem("sequenceName", "ids").getLong("value")
+  }
+
+  def setCurrentSeqValue(v: Long) {
+    Dynamo.sequenceTable.putItem(new Item().withString("sequenceName", "ids").withLong("value", v))
   }
 }
 

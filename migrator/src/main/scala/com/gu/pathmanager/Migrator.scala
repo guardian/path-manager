@@ -46,6 +46,24 @@ class Migrator(conf: DbConfiguration) {
     errors foreach{error => println(s"\t$error")}
   }
 
+  def updateSequence: Unit = {
+    DB readOnly { implicit session =>
+      println("updating sequence...")
+      val r2Val = sql"select page_draft_seq.nextval as c from dual".map(rs => rs.int("c")).single().apply().get
+      val seqVal = MigrationPathStore.getCurrentSeqValue
+      println(s"current seq values: r2 -> $r2Val, dynamo -> $seqVal")
+
+      val desiredVal = Math.max(seqVal, r2Val + 10000) // use larger of current seq or R2 value + 20000 (to give us grace between migrating and cutting R2 over)
+      println(s"desired sequence value $desiredVal")
+      if (desiredVal != seqVal) {
+        MigrationPathStore.setCurrentSeqValue(desiredVal)
+        println("updated sequence value")
+      } else {
+        println("leaving sequence value alone")
+      }
+    }
+  }
+
 
   private def dataSource(conf: DbConfiguration): DataSource = {
     val oracleDataSource = new OracleDataSource
@@ -74,6 +92,7 @@ object Migrator {
     val migrator = new Migrator(loadProperties)
 
     migrator.migratePaths
+    migrator.updateSequence
 
   }
 
