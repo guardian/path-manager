@@ -91,9 +91,18 @@ object Migrator {
   def main(args: Array[String]) {
     val migrator = new Migrator(loadProperties)
 
-    migrator.migratePaths
-    migrator.updateSequence
+    val (migratePaths, migrateSeq) = determineMigrations(args)
 
+    if(migratePaths) migrator.migratePaths
+
+    if(migrateSeq) migrator.updateSequence
+
+  }
+
+  def determineMigrations(args: Array[String]) = args.headOption match {
+    case Some("paths") => (true, false)
+    case Some("seq") => (false, true)
+    case _ => (true, true)
   }
 
   def loadProperties = try {
