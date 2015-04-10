@@ -8,9 +8,11 @@ import oracle.jdbc.pool.OracleDataSource
 import scalikejdbc._
 
 
-class Migrator(conf: DbConfiguration) {
+class Migrator(conf: MigratorConfiguration) {
 
   ConnectionPool.singleton(new DataSourceConnectionPool(dataSource(conf)))
+
+  val pathManager = new PathManagerConnection(conf.pathManagerUrl)
 
   def countPages = DB readOnly { implicit session =>
     sql"select count(*) as c from page_draft".map(rs => rs.int("c")).single().apply().get
@@ -29,7 +31,7 @@ class Migrator(conf: DbConfiguration) {
         val record = PathRecord(path, id, "canonical", "r2")
 
         try {
-          MigrationPathStore.register(record)
+          pathManager.register(record)
         } catch {
           case e: Exception => {
             errors = MigrationError(path, id, e.getMessage) :: errors
@@ -50,13 +52,13 @@ class Migrator(conf: DbConfiguration) {
     DB readOnly { implicit session =>
       println("updating sequence...")
       val r2Val = sql"select page_draft_seq.nextval as c from dual".map(rs => rs.int("c")).single().apply().get
-      val seqVal = MigrationPathStore.getCurrentSeqValue
+      val seqVal = pathManager.getCurrentSeqValue
       println(s"current seq values: r2 -> $r2Val, dynamo -> $seqVal")
 
       val desiredVal = Math.max(seqVal, r2Val + 10000) // use larger of current seq or R2 value + 20000 (to give us grace between migrating and cutting R2 over)
       println(s"desired sequence value $desiredVal")
       if (desiredVal != seqVal) {
-        MigrationPathStore.setCurrentSeqValue(desiredVal)
+        pathManager.setCurrentSeqValue(desiredVal)
         println("updated sequence value")
       } else {
         println("leaving sequence value alone")
@@ -65,7 +67,7 @@ class Migrator(conf: DbConfiguration) {
   }
 
 
-  private def dataSource(conf: DbConfiguration): DataSource = {
+  private def dataSource(conf: MigratorConfiguration): DataSource = {
     val oracleDataSource = new OracleDataSource
 
     oracleDataSource.setUser(conf.user)
@@ -108,30 +110,31 @@ object Migrator {
   def loadProperties = try {
 
     val props = new Properties()
-    props.load(new FileInputStream("db.properties"))
+    props.load(new FileInputStream("migrator.properties"))
 
     def readProperty(name: String) = {
       Option(props.getProperty(name)).getOrElse{
-        println(s"unable to read property $name, ensure this is set in db.properties")
+        println(s"unable to read property $name, ensure this is set in migrator.properties")
         sys.exit(1)
       }
     }
 
-    DbConfiguration(
+    MigratorConfiguration(
       dbAddress = readProperty("databaseAddress"),
       dbService = readProperty("databaseService"),
       user = readProperty("user"),
-      password = readProperty("password")
+      password = readProperty("password"),
+      pathManagerUrl = readProperty("pathManagerUrl")
     )
 
   } catch {
     case fnf: FileNotFoundException => {
-      println("could not load db.properties")
+      println("could not load migrator.properties")
       sys.exit(1)
     }
   }
 }
 
-case class DbConfiguration(dbAddress: String, dbService: String, user: String, password: String)
+case class MigratorConfiguration(dbAddress: String, dbService: String, user: String, password: String, pathManagerUrl: String)
 
 case class MigrationError(path: String, id: Long, message: String)

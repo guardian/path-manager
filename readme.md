@@ -238,13 +238,14 @@ Running a migration
 
 The migrator sub project produces a executable jar which will migrate data from an R2 database into the path manager.
 
-To run you will need a `db.properties` file in the same directory you are executing from. The format of this file is:
+To run you will need a `migrator.properties` file in the same directory you are executing from. The format of this file is:
 
 ```
     databaseAddress=10.0.0.127
     databaseService=gudevelopersdb.gucode.gnl
     user=deliveryXX 
     password=XXXXXXXXXXXX 
+    pathManagerUrl=http://pathmanager.local.dev-gutools.co.uk/
 
 ```
 
@@ -252,14 +253,14 @@ Note the address will likely be an ip address as we've not yet got our internal 
 is what oracle is calling the database, typically the bit at the end of a jdbc connectionString. Creating this file with
 the correct values is left as a exercise for the reader.
 
-To run the migrator put a copy of the jar on a path manager instance (or an instance with the same instance profile allowing
-access to dynamo, tags etc.), set up the config and then execute
+To run the migrator put a copy of the jar on an r2 admin instance (or a GC2 instance with access to the database), set up the config and then execute
 
 ```
     java -jar migrator.jar
 ```
 
-This will read all the paths in the R2 db and insert them into dynamo. It will also bump the dynamo sequence to larger than the R2 one.
+This will read all the paths in the R2 db and send them to the the environment's pathmanager to insert them into dynamo.
+It will also bump the dynamo sequence to larger than the R2 one.
 
 If you only want ro migrate paths run
 
