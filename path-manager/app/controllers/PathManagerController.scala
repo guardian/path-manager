@@ -110,13 +110,14 @@ object PathManagerController extends Controller {
     val newSeqNo = submission("val").map(_.toLong).head
 
     IdentifierSequence.setCurrentId(newSeqNo)
+    val currentId = IdentifierSequence.getCurrentId
 
-    Redirect("/debug")
+    Ok(s"$currentId")
   }
 
-  def showDebug = Action {
+  def showCurrentSequence = Action {
     val currentId = IdentifierSequence.getCurrentId
-    Ok(s"current id = $currentId")
+    Ok(s"$currentId")
   }
 
   def argoOk(json: JsValue) = Ok(Json.obj("data" -> json)).as("application/vnd.argo+json")
