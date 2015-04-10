@@ -1,14 +1,24 @@
 package com.gu.pathmanager
 
-import com.squareup.okhttp.{FormEncodingBuilder, RequestBody, Request, OkHttpClient}
+import com.squareup.okhttp._
 
 class PathManagerConnection(pathManagerBaseUrl: String) {
 
   val httpclient = new OkHttpClient()
 
-  def register(proposedPathRecord: PathRecord) = {
-    //do noting currently
+  val JSON = MediaType.parse("application/json; charset=utf-8")
 
+  def register(proposedPathRecord: PathRecord) = {
+    val id = proposedPathRecord.identifier
+
+    val body = RequestBody.create(JSON, proposedPathRecord.toJsonString)
+    val req = new Request.Builder().url(pathManagerBaseUrl + s"paths/$id").put(body).build()
+    val resp = httpclient.newCall(req).execute()
+
+    if(!resp.isSuccessful) {
+      val body = resp.body().string()
+      throw new Exception(body)
+    }
   }
 
 
@@ -29,5 +39,3 @@ class PathManagerConnection(pathManagerBaseUrl: String) {
     }
   }
 }
-
-class PathInUseException(m: String) extends Exception(m)
