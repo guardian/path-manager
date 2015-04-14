@@ -1,6 +1,6 @@
 package com.gu.pathmanager
 
-import java.io.{FileNotFoundException, FileInputStream}
+import java.io._
 import java.sql.DriverManager
 import java.util.Properties
 import javax.sql.DataSource
@@ -48,6 +48,52 @@ class Migrator(conf: MigratorConfiguration) {
     errors foreach{error => println(s"\t$error")}
   }
 
+  def exportPaths {
+    val total = countPages
+    var count = 0
+    var errors: List[MigrationError] = Nil
+
+    val outFile = new File("paths.txt")
+    val writer = new BufferedWriter(new FileWriter(outFile, true))
+
+    DB readOnly { implicit session =>
+      sql"select id, cms_path from page_draft".foreach{ rs =>
+
+        val id = rs.long("id")
+        val path = rs.string("cms_path").replace("/Guardian/", "")
+        val record = PathRecord(path, id, "canonical", "r2")
+
+        try {
+          writer.write(s"$id $path")
+          writer.newLine()
+        } catch {
+          case e: Exception => {
+            errors = MigrationError(path, id, e.getMessage) :: errors
+          }
+        }
+
+        count = count + 1
+        if(count % 1000 == 0) println(s"exported $count of $total pages. There are ${errors.size} errors")
+      }
+    }
+    writer.flush()
+    writer.close()
+    println("finished path export.")
+    println(s"$count paths exported")
+    println("errors")
+    errors foreach{error => println(s"\t$error")}
+  }
+
+  def importPaths: Unit = {
+    scala.io.Source.fromFile("paths.txt").getLines().foreach{ line: String =>
+      val parts = line.split(" ")
+      val id = parts(0)
+      val path = parts(1)
+
+      println(s"$id -> $path")
+    }
+  }
+
   def updateSequence: Unit = {
     DB readOnly { implicit session =>
       println("updating sequence...")
@@ -93,18 +139,19 @@ object Migrator {
   def main(args: Array[String]) {
     val migrator = new Migrator(loadProperties)
 
-    val (migratePaths, migrateSeq) = determineMigrations(args)
-
-    if(migratePaths) migrator.migratePaths
-
-    if(migrateSeq) migrator.updateSequence
+    runMigrations(args, migrator)
 
   }
 
-  def determineMigrations(args: Array[String]) = args.headOption match {
-    case Some("paths") => (true, false)
-    case Some("seq") => (false, true)
-    case _ => (true, true)
+  def runMigrations(args: Array[String], migrator: Migrator) = args.headOption match {
+    case Some("paths") => migrator.migratePaths
+    case Some("seq") => migrator.updateSequence
+    case Some("export") => migrator.exportPaths
+    case Some("import") => migrator.importPaths
+    case _ => {
+      migrator.migratePaths
+      migrator.updateSequence
+    }
   }
 
   def loadProperties = try {
