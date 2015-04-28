@@ -77,12 +77,15 @@ object PathManagerController extends Controller {
   }
 
   def getPathDetails(path: String) = Action {
+    Logger.debug(s"looking up path $path")
     val pathDetails = PathStore.getPathDetails(path)
     val pathsByType = pathDetails.groupBy(_.`type`)
     PathLookups.increment
     if(pathsByType.isEmpty) {
+      Logger.debug(s"path $path not registered")
       NotFound
     } else {
+      Logger.debug(s"path $path found")
       argoOk(Json.toJson(pathsByType))
     }
   }

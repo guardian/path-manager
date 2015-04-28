@@ -54,6 +54,8 @@ lazy val migrator = project.in(file("migrator"))
     libraryDependencies ++= Seq(
       "com.squareup.okhttp" % "okhttp" % "2.3.0",
       "org.scalikejdbc" %% "scalikejdbc"  % "2.2.5",
+      "com.amazonaws" % "aws-java-sdk" % "1.9.23",
+      "org.apache.commons" % "commons-lang3" % "3.3.2",
       "com.oracle" % "jdbc_11g" % "11.2.0.3.0",
       "ch.qos.logback" % "logback-classic" % "1.1.2"
     )
