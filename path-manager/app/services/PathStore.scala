@@ -24,7 +24,7 @@ object PathStore {
         val pathRecord = PathRecord(path, id, "canonical", system)
         val shortUrlPathRecord = PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", system)
 
-        Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
+        putPathItemAndAwaitIndexUpdate(pathRecord)
         Logger.debug(s"Adding new short url record for [$id]. short path[${shortUrlPathRecord.path }]")
         Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
 
@@ -65,7 +65,7 @@ object PathStore {
           }
         }
 
-        Dynamo.pathsTable.putItem(proposedPathRecord.asDynamoItem)
+        putPathItemAndAwaitIndexUpdate(proposedPathRecord)
 
         Logger.debug(s"Registered path [${proposedPathRecord.path}] for id [$id] successfully")
         Right(List(proposedPathRecord, shortUrlPathRecord).groupBy(_.`type`))
@@ -91,7 +91,7 @@ object PathStore {
             val newRecord = existingRecord.copy(path = newPath)
             Logger.debug(s"Removing old path for item [$id]. old path[$existingPath] new path [$newPath]")
             Dynamo.pathsTable.deleteItem("path", existingPath)
-            Dynamo.pathsTable.putItem(newRecord.asDynamoItem)
+            putPathItemAndAwaitIndexUpdate(newRecord)
             newRecord
           } else {
             existingRecord
@@ -124,5 +124,34 @@ object PathStore {
     val pathItems = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id))
     val paths = pathItems.map{ PathRecord(_) }
     paths.groupBy(_.`type`)
+  }
+
+  def putPathItemAndAwaitIndexUpdate(record: PathRecord) {
+
+    Dynamo.pathsTable.putItem(record.asDynamoItem)
+
+    def waitForIndexUpdate(attempts: Int = 0): Boolean = {
+
+      if (attempts > 20) {
+        false
+      } else {
+        val pathRecordsFromIndex = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", record.identifier), new RangeKeyCondition("type").eq(record.`type`))
+
+        val pathRecordFromIndex = pathRecordsFromIndex.map {
+          PathRecord(_)
+        }.headOption
+
+        pathRecordFromIndex match {
+          case Some(i) if (i.path == record.path) => true
+          case _ => {
+            Thread.sleep(50)
+            waitForIndexUpdate(attempts + 1)
+          }
+        }
+      }
+    }
+
+
+
   }
 }
