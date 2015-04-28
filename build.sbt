@@ -17,8 +17,8 @@ lazy val root = project.in(file("."))
     // Never interested in the version number in the artifact name
     name in Universal := normalizedName.value,
     riffRaffArtifactPublishPath := normalizedName.value,
-    scalaVersion := "2.11.4",
-    scalaVersion in ThisBuild := "2.11.4",
+    scalaVersion := "2.11.6",
+    scalaVersion in ThisBuild := "2.11.6",
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-Xfatal-warnings"),
     doc in Compile <<= target.map(_ / "none"),
     fork in Test := false
@@ -50,8 +50,11 @@ lazy val migrator = project.in(file("migrator"))
     riffRaffPackageType := assembly.value,
     riffRaffArtifactFile := "migrator.zip",
     riffRaffArtifactPublishPath := "migrator",
+    resolvers += "Guardian Third-party Nexus" at "http://nexus.gudev.gnl:8081/nexus/content/repositories/thirdparty/", // for the oracle driver, because oracle are stupid
     libraryDependencies ++= Seq(
-      "com.amazonaws" % "aws-java-sdk" % "1.9.23",
-      "org.apache.commons" % "commons-lang3" % "3.3.2"
+      "com.squareup.okhttp" % "okhttp" % "2.3.0",
+      "org.scalikejdbc" %% "scalikejdbc"  % "2.2.5",
+      "com.oracle" % "jdbc_11g" % "11.2.0.3.0",
+      "ch.qos.logback" % "logback-classic" % "1.1.2"
     )
   )

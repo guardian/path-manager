@@ -8,7 +8,7 @@ PUT     /paths/:id                          controllers.PathManagerController.re
 POST    /paths/:id                          controllers.PathManagerController.updateCanonicalPath(id: Long)
 DELETE  /paths/:id                          controllers.PathManagerController.deleteRecord(id: Long)
 
-GET     /debug                              controllers.PathManagerController.showDebug
+GET     /showCurrentSequence                controllers.PathManagerController.showCurrentSequence
 GET     /updateIdSeq                        controllers.PathManagerController.showIdSeq
 POST    /updateIdSeq                        controllers.PathManagerController.updateIdSeq
 

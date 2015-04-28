@@ -189,8 +189,6 @@ Not supported yet
 
 The path manager does not currently support:
 
-* bulk import of paths - This will be implented once the system is running and trickle migration is active
-* short url generation - There is currently a nod towards this but it's all smoke and mirrors
 * redirects - These may be added at a later date once the work on canonical paths is completed.
 
 Running locally
@@ -200,7 +198,7 @@ The path manager requires a local version of DynamoDB, to start this just run th
 this will download the latest dynamo local from amazon and start it on port 10005. You can access
 [http://localhost:10005/shell/](http://localhost:10005/shell/) to query tables etc.
 
-The path manager itself is a play app so can be started by the ```run``` command in ```sbt```, the app is configured to run
+The path manager itself is a play app so can be started by the ```run``` command in the `pathManager` sub project in ```sbt```, the app is configured to run
 on port 10000.
 
 To run correctly in standalone mode we run behind nginx, This can be installed as follows (you may have done
@@ -233,3 +231,47 @@ this already if you work with identity, r2 or similar):
 The path manager should now be accessible on:
 
    [https://pathmanager.local.dev-gutools.co.uk/debug](https://pathmanager.local.dev-gutools.co.uk/debug)
+   
+
+Running a migration
+===================
+
+The migrator sub project produces a executable jar which will migrate data from an R2 database into the path manager.
+
+To run you will need a `migrator.properties` file in the same directory you are executing from. The format of this file is:
+
+```
+    databaseAddress=10.0.0.127
+    databaseService=gudevelopersdb.gucode.gnl
+    user=deliveryXX 
+    password=XXXXXXXXXXXX 
+    pathManagerUrl=http://pathmanager.local.dev-gutools.co.uk/
+
+```
+
+Note the address will likely be an ip address as we've not yet got our internal DNS accessible from our VPC. The service
+is what oracle is calling the database, typically the bit at the end of a jdbc connectionString. Creating this file with
+the correct values is left as a exercise for the reader.
+
+To run the migrator put a copy of the jar on an r2 admin instance (or a GC2 instance with access to the database), set up the config and then execute
+
+```
+    java -jar migrator.jar
+```
+
+This will read all the paths in the R2 db and send them to the the environment's pathmanager to insert them into dynamo.
+It will also bump the dynamo sequence to larger than the R2 one.
+
+If you only want ro migrate paths run
+
+
+```
+    java -jar migrator.jar paths
+```
+
+Likewise, to only synchronise the sequence run
+
+
+```
+    java -jar migrator.jar seq
+```
