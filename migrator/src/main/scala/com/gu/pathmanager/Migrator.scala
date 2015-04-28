@@ -84,16 +84,6 @@ class Migrator(conf: MigratorConfiguration) {
     errors foreach{error => println(s"\t$error")}
   }
 
-  def importPaths: Unit = {
-    scala.io.Source.fromFile("paths.txt").getLines().foreach{ line: String =>
-      val parts = line.split(" ")
-      val id = parts(0)
-      val path = parts(1)
-
-      println(s"$id -> $path")
-    }
-  }
-
   def updateSequence: Unit = {
     DB readOnly { implicit session =>
       println("updating sequence...")
@@ -133,11 +123,41 @@ class Migrator(conf: MigratorConfiguration) {
   }
 }
 
+object Importer {
+  def importPaths: Unit = {
+
+    var count = 0
+    var errors: List[MigrationError] = Nil
+
+    scala.io.Source.fromFile("paths.txt").getLines().foreach{ line: String =>
+      val parts = line.split(" ")
+      val id = parts(0).toLong
+      val path = parts(1)
+      try {
+        val record = PathRecord(path, id, "canonical", "r2")
+
+        MigrationPathStore.register(record)
+      } catch {
+        case e: Exception => {
+          errors = MigrationError(path, id, e.getMessage) :: errors
+        }
+      }
+      count = count + 1
+      if(count % 1000 == 0) println(s"migrated $count pages. There are ${errors.size} errors")
+    }
+    println("finished path import.")
+    println(s"$count paths imported")
+    println("errors")
+    errors foreach{error => println(s"\t$error")}
+  }
+
+}
+
 
 object Migrator {
 
   def main(args: Array[String]) {
-    val migrator = new Migrator(loadProperties)
+    val migrator = if(requiresMigrator(args)) new Migrator(loadProperties) else null
 
     runMigrations(args, migrator)
 
@@ -147,11 +167,16 @@ object Migrator {
     case Some("paths") => migrator.migratePaths
     case Some("seq") => migrator.updateSequence
     case Some("export") => migrator.exportPaths
-    case Some("import") => migrator.importPaths
+    case Some("import") => Importer.importPaths
     case _ => {
       migrator.migratePaths
       migrator.updateSequence
     }
+  }
+
+  def requiresMigrator(args: Array[String]) = args.headOption match {
+    case Some("import") => false
+    case _ => true
   }
 
   def loadProperties = try {
