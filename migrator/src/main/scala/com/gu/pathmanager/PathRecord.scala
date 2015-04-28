@@ -11,6 +11,12 @@ case class PathRecord(path: String, identifier: Long, `type`: String, system: St
     .withString("type", `type`)
     .withString("system", system)
 
+  val stx = '\u0002'
+  val etx = '\u0003'
+  val lf = '\u000A'
+
+  def asDynamoImportLine = s"""path${etx}{"s":"${path}"}${stx}identifier${etx}{"n":"${identifier}"}${stx}type${etx}{"s":"${`type`}"}${stx}system${etx}{"s":"${system}"}${lf}"""
+
 }
 
 object PathRecord {

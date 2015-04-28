@@ -84,6 +84,43 @@ class Migrator(conf: MigratorConfiguration) {
     errors foreach{error => println(s"\t$error")}
   }
 
+  def generateDynamoImportFile {
+    val total = countPages
+    var count = 0
+    var errors: List[MigrationError] = Nil
+
+    val outFile = new File("paths.dyn")
+    val writer = new BufferedWriter(new FileWriter(outFile, true))
+
+    DB readOnly { implicit session =>
+      sql"select id, cms_path from page_draft".foreach{ rs =>
+
+        val id = rs.long("id")
+        val path = rs.string("cms_path").replace("/Guardian/", "")
+        val record = PathRecord(path, id, "canonical", "r2")
+        val shortRecord =  PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", "r2")
+
+        try {
+          writer.write(record.asDynamoImportLine)
+          writer.write(shortRecord.asDynamoImportLine)
+        } catch {
+          case e: Exception => {
+            errors = MigrationError(path, id, e.getMessage) :: errors
+          }
+        }
+
+        count = count + 1
+        if(count % 1000 == 0) println(s"exported $count of $total pages. There are ${errors.size} errors")
+      }
+    }
+    writer.flush()
+    writer.close()
+    println("finished path export.")
+    println(s"$count paths exported")
+    println("errors")
+    errors foreach{error => println(s"\t$error")}
+  }
+
   def updateSequence: Unit = {
     DB readOnly { implicit session =>
       println("updating sequence...")
@@ -167,6 +204,7 @@ object Migrator {
     case Some("paths") => migrator.migratePaths
     case Some("seq") => migrator.updateSequence
     case Some("export") => migrator.exportPaths
+    case Some("exportDyn") => migrator.generateDynamoImportFile
     case Some("import") => Importer.importPaths
     case _ => {
       migrator.migratePaths
