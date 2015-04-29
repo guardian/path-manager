@@ -81,7 +81,7 @@ object PathStore {
     val canonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
     if(newPathRecord.exists(_.identifier != id)) {
-      Logger.warn(s"Failed to update path [$newPath], already claimed by id [${newPathRecord.map{_.identifier}}], submitting id [$id]")
+      Logger.warn(s"Failed to update path [$newPath], already claimed by id [${newPathRecord.map{_.identifier}.get}], submitting id [$id]")
       Left("path already in use")
     } else {
       canonicalPathForId.map { existingRecord: PathRecord =>
