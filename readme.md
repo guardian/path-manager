@@ -276,8 +276,10 @@ The recommended way to migrate the path data is to export the R2 data to a dynam
     java -jar migrator.jar exportDyn
 ```
 
-This will create a paths.dyn file. Upload this to S3 (in a foler corresponding to the environment you are migrating). And then follow
-amazon's instrctions for [importing data into dynamo](http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-importexport-ddb-part1.html)
+This will create a paths.dyn file. Upload this to S3 (in a folder corresponding to the environment you are migrating). And then follow
+amazon's instructions for [importing data into dynamo](http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-importexport-ddb-part1.html)
  
 When you do the import you probably want to increase the write capacity on your dynamo table so that your job runs in a sensible timeframe (also set
-the throughput %age for the import job higher than the 20% it defaults to).
+the throughput %age for the import job higher than the 20% it defaults to). If your job is going to run for some time you may need to update timeout
+set in the amazon job template, to do this open the job in the architect view and tinker with the settings (you can also increase the number of task
+runners, box sizes etc here.)
