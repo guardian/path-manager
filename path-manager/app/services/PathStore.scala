@@ -133,6 +133,7 @@ object PathStore {
     def waitForIndexUpdate(attempts: Int = 0): Boolean = {
 
       if (attempts > 20) {
+        Logger.warn(s"update to path [${record.path}] for id [${record.identifier}] has not propagated to secondary index after 20 checks")
         false
       } else {
         val pathRecordsFromIndex = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", record.identifier), new RangeKeyCondition("type").eq(record.`type`))
