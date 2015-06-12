@@ -4,7 +4,7 @@
     "Parameters":{
         "KeyName":{
             "Description":"The EC2 Key Pair to allow SSH access to the instance",
-            "Type":"String",
+            "Type":"AWS::EC2::KeyPair::KeyName",
             "Default":"composer-team"
         },
         "Stage":{
@@ -15,18 +15,22 @@
         },
         "VpcId": {
             "Description": "ID of the VPC onto which to launch the application eg. vpc-1234abcd",
-            "Type": "String",
-            "Default": "vpc-143ef571"
+            "Type": "AWS::EC2::VPC::Id",
+            "Default": "vpc-381fa95d"
         },
         "PublicVpcSubnets": {
             "Description": "Subnets to use in VPC for public internet-facing ELB eg. subnet-abcd1234",
-            "Type": "CommaDelimitedList",
-            "Default": "subnet-101f9875, subnet-4f17bb38, subnet-90d414c9"
+            "Type": "List<AWS::EC2::Subnet::Id>",
+            "Default": "subnet-c3620fa6,subnet-2b37bd5c,subnet-3667c86f"
         },
         "PrivateVpcSubnets": {
             "Description": "Subnets to use in VPC for private EC2 instances eg. subnet-abcd1234",
-            "Type": "CommaDelimitedList",
-            "Default": "subnet-131f9876, subnet-4e17bb39, subnet-93d414ca"
+            "Type": "List<AWS::EC2::Subnet::Id>",
+            "Default": "subnet-c2620fa7,subnet-2a37bd5d,subnet-2967c870"
+        },
+        "MachineImagesAMI": {
+            "Description": "AMI id from the machine-images repo",
+            "Type": "AWS::EC2::Image::Id"
         },
         "SSLCertificateARN": {
             "Description": "The ARN of the SSL certificate to use in the ELB",
@@ -40,100 +44,6 @@
     },
 
     "Resources":{
-
-        "SequenceDynamoDBTable": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [
-                    {
-                        "AttributeName": "sequenceName",
-                        "AttributeType": "S"
-                    }
-                ],
-                "KeySchema": [
-                    {
-                        "AttributeName": "sequenceName",
-                        "KeyType": "HASH"
-                    }
-                ],
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "5",
-                    "WriteCapacityUnits": "5"
-                },
-                "TableName": {
-                    "Fn::Join": ["-", [
-                        {
-                            "Ref": "Stage"
-                        },
-                        "pathManager-sequence"
-                    ]]
-                }
-            },
-            "DeletionPolicy" : "Retain"
-        },
-
-        "PathsDynamoDBTable": {
-            "Type": "AWS::DynamoDB::Table",
-            "Properties": {
-                "AttributeDefinitions": [
-                    {
-                        "AttributeName": "path",
-                        "AttributeType": "S"
-                    },
-                    {
-                        "AttributeName": "identifier",
-                        "AttributeType": "N"
-                    },
-                    {
-                        "AttributeName": "type",
-                        "AttributeType": "S"
-                    }
-                ],
-                "GlobalSecondaryIndexes": [
-                    {
-                        "IndexName": "id-index",
-                        "KeySchema": [
-                            {
-                                "AttributeName": "identifier",
-                                "KeyType": "HASH"
-                            },
-                            {
-                                "AttributeName": "type",
-                                "KeyType": "RANGE"
-                            }
-                        ],
-                        "Projection": {
-                            "ProjectionType": "ALL"
-                        },
-                        "ProvisionedThroughput": {
-                            "ReadCapacityUnits": "10",
-                            "WriteCapacityUnits": "10"
-                        }
-                    }
-                ],
-
-                "KeySchema": [
-                    {
-                        "AttributeName": "path",
-                        "KeyType": "HASH"
-                    }
-                ],
-
-                "ProvisionedThroughput": {
-                    "ReadCapacityUnits": "10",
-                    "WriteCapacityUnits": "10"
-                },
-                "TableName": {
-                    "Fn::Join": ["-", [
-                        {
-                            "Ref": "Stage"
-                        },
-                        "pathManager-paths"
-                    ]]
-                }
-            },
-            "DeletionPolicy" : "Retain"
-        },
 
         "PathManagerRole": {
             "Type": "AWS::IAM::Role",
@@ -263,13 +173,19 @@
                         "IpProtocol": "tcp",
                         "FromPort": 9000,
                         "ToPort": 9000,
-                        "SourceSecurityGroupId": { "Ref": "LoadBalancerSecurityGroup"}
+                        "SourceSecurityGroupId": { "Ref": "PublicLoadBalancerSecurityGroup"}
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": 9000,
+                        "ToPort": 9000,
+                        "SourceSecurityGroupId": { "Ref": "InternalLoadBalancerSecurityGroup"}
                     }
                 ]
             }
         },
 
-        "LoadBalancerSecurityGroup": {
+        "PublicLoadBalancerSecurityGroup": {
             "Type": "AWS::EC2::SecurityGroup",
             "Properties": {
                 "GroupDescription": "path manager application load balancer",
@@ -295,7 +211,7 @@
         "PublicPathManagerLoadBalancer" : {
             "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
             "Properties" : {
-                "SecurityGroups": [{ "Fn::GetAtt": ["LoadBalancerSecurityGroup", "GroupId"] }],
+                "SecurityGroups": [{ "Fn::GetAtt": ["PublicLoadBalancerSecurityGroup", "GroupId"] }],
                 "CrossZone": true,
                 "Subnets": {"Ref": "PublicVpcSubnets"},
                 "Listeners" : [ {
@@ -315,10 +231,82 @@
                     "UnhealthyThreshold" : "2",
                     "Interval" : "10",
                     "Timeout" : "5"
-                }
+                },
+                "Tags":[
+                    {
+                        "Key":"Stage",
+                        "Value":{
+                            "Ref":"Stage"
+                        }
+                    },
+                    {
+                        "Key": "Stack",
+                        "Value": "flexible"
+                    },
+                    {
+                        "Key":"App",
+                        "Value":"path-manager"
+                    },
+                    {
+                        "Key":"Loadbalancer",
+                        "Value":"internet-facing"
+                    }
+                ]
             }
         },
 
+        "InternalLoadBalancerSecurityGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "internal path manager application load balancer",
+                "VpcId": {"Ref": "VpcId"},
+                "SecurityGroupIngress": [
+                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "10.248.200.0/21" }
+                ]
+            }
+        },
+
+        "InternalPathManagerLoadBalancer" : {
+            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties" : {
+                "SecurityGroups": [{ "Fn::GetAtt": ["InternalLoadBalancerSecurityGroup", "GroupId"] }],
+                "Scheme": "internal",
+                "CrossZone": true,
+                "Subnets": {"Ref": "PrivateVpcSubnets"},
+                "Listeners" : [ {
+                    "LoadBalancerPort": "80",
+                    "InstancePort": "9000",
+                    "Protocol": "HTTP"
+                } ],
+                "HealthCheck" : {
+                    "Target" : "HTTP:9000/management/healthcheck",
+                    "HealthyThreshold" : "2",
+                    "UnhealthyThreshold" : "2",
+                    "Interval" : "10",
+                    "Timeout" : "5"
+                },
+                "Tags":[
+                    {
+                        "Key":"Stage",
+                        "Value":{
+                            "Ref":"Stage"
+                        }
+                    },
+                    {
+                        "Key": "Stack",
+                        "Value": "flexible"
+                    },
+                    {
+                        "Key":"App",
+                        "Value":"path-manager"
+                    },
+                    {
+                        "Key":"Loadbalancer",
+                        "Value":"internal"
+                    }
+                ]
+            }
+        },
 
         "AutoscalingGroup":{
             "Type":"AWS::AutoScaling::AutoScalingGroup",
@@ -331,7 +319,7 @@
                 "DesiredCapacity": "1",
                 "HealthCheckType" : "ELB",
                 "HealthCheckGracePeriod": 300,
-                "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }],
+                "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }, { "Ref": "InternalPathManagerLoadBalancer" }],
                 "Tags":[
                     {
                         "Key":"Stage",
@@ -342,7 +330,7 @@
                     },
                     {
                         "Key": "Stack",
-                        "Value": "composer",
+                        "Value": "flexible",
                         "PropagateAtLaunch": "true"
                     },
                     {
@@ -356,45 +344,9 @@
 
         "PathManagerLaunchConfig":{
             "Type":"AWS::AutoScaling::LaunchConfiguration",
-            "Metadata": {
-                "AWS::CloudFormation::Authentication": {
-                    "distributionAuthentication": {
-                        "type": "S3",
-                        "roleName": { "Ref": "PathManagerRole" },
-                        "buckets": [ "composer-dist" ]
-                    }
-                },
-                "AWS::CloudFormation::Init": {
-                    "config": {
-                        "users": {
-                            "pathmanager": {
-                                "homeDir": "/home/pathmanager"
-                            }
-                        },
-                        "files": {
-                            "/etc/init/path-manager.conf": {
-                                "source": { "Fn::Join" : ["", [
-                                    "https://s3-eu-west-1.amazonaws.com/composer-dist/composer/",
-                                    { "Ref": "Stage" },
-                                    "/path-manager/path-manager.conf"
-                                ]]},
-                                "authentication": "distributionAuthentication"
-                            },
-                            "/home/pathmanager/path-manager.tgz": {
-                                "source": { "Fn::Join" : ["", [
-                                    "https://s3-eu-west-1.amazonaws.com/composer-dist/composer/",
-                                    { "Ref": "Stage" },
-                                    "/path-manager/path-manager.tgz"
-                                ]]},
-                                "authentication": "distributionAuthentication"
-                            }
-                        }
-                    }
-                }
-            },
             "Properties":{
                 "KeyName":{ "Ref":"KeyName" },
-                "ImageId":"ami-0345d674",
+                "ImageId":{ "Ref":"MachineImagesAMI" },
                 "SecurityGroups": [
                     { "Ref": "AppServerSecurityGroup" },
                     { "Ref": "SSHSecurityGroup" }
@@ -405,20 +357,7 @@
                     "Fn::Base64":{
                         "Fn::Join":["", [
                             "#!/bin/bash -ev\n",
-                            "locale-gen en_GB.UTF-8\n",
-
-                            "cfn-init -s ", { "Ref" : "AWS::StackId" }, " -r PathManagerLaunchConfig ",
-                            "  --region ", { "Ref" : "AWS::Region" }, " || error_exit 'Failed to run cfn-init'\n",
-
-                            "(cd /home/pathmanager; tar xvzf path-manager.tgz)\n",
-
-                            "mkdir /home/pathmanager/logs\n",
-
-                            "chown -R pathmanager /home/pathmanager\n",
-                            "chgrp -R pathmanager /home/pathmanager\n",
-
-
-                            "start path-manager\n"
+                            "/opt/features/native-packager/install.sh -b composer-dist -t tgz -s\n"
                         ]]
                     }
                 }
