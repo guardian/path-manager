@@ -64,7 +64,8 @@
                         "pathManager-sequence"
                     ]]
                 }
-            }
+            },
+            "DeletionPolicy" : "Retain"
         },
 
         "PathsDynamoDBTable": {
@@ -126,7 +127,8 @@
                         "pathManager-paths"
                     ]]
                 }
-            }
+            },
+            "DeletionPolicy" : "Retain"
         },
 
         "PathManagerRole": {
