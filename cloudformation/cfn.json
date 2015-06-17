@@ -10,8 +10,7 @@
         "Stage":{
             "Description":"Environment name",
             "Type":"String",
-            "AllowedValues":[ "PROD", "CODE", "QA", "TEST", "RELEASE" ],
-            "Default": "PROD"
+            "AllowedValues":[ "PROD", "CODE", "QA", "TEST", "RELEASE" ]
         },
         "VpcId": {
             "Description": "ID of the VPC onto which to launch the application eg. vpc-1234abcd",
@@ -41,6 +40,10 @@
             "Type": "String",
             "Default": "77.91.248.0/21"
         }
+    },
+
+    "Conditions":{
+        "IsProd": {"Fn::Equals" : [{"Ref":"Stage"}, "PROD"]}
     },
 
     "Resources":{
@@ -314,9 +317,8 @@
                 "AvailabilityZones": {"Fn::GetAZs": ""},
                 "VPCZoneIdentifier": {"Ref": "PrivateVpcSubnets"},
                 "LaunchConfigurationName":{ "Ref":"PathManagerLaunchConfig" },
-                "MinSize":"1",
-                "MaxSize":"2",
-                "DesiredCapacity": "1",
+                "MinSize": { "Fn::If" : [ "IsProd", 2, 1]},
+                "MaxSize": { "Fn::If" : [ "IsProd", 4, 2]},
                 "HealthCheckType" : "ELB",
                 "HealthCheckGracePeriod": 300,
                 "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }, { "Ref": "InternalPathManagerLoadBalancer" }],
