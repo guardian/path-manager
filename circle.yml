@@ -1,6 +1,8 @@
 machine:
-  environment:
-    SBT_VERSION: 0.13.9
 dependencies:
   cache_directories:
     - "~/.sbt"
+    - "target/resolution-cache"
+    - "target/streams"
+    - "project/target/resolution-cache"
+    - "project/target/streams"
