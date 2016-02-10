@@ -1,2 +1,6 @@
 machine:
-  sbt: 0.13.9
+  environment:
+    SBT_VERSION: 0.13.9
+dependencies:
+  cache_directories:
+    - "~/.sbt"
