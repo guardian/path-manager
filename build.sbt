@@ -10,52 +10,37 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 version := "1.0"
 
+lazy val dependencies = Seq(
+  "com.amazonaws" % "aws-java-sdk" % "1.9.23",
+  "org.apache.commons" % "commons-lang3" % "3.3.2",
+  "net.logstash.logback" % "logstash-logback-encoder" % "4.2",
+  "org.scalatestplus" %% "play" % "1.1.0" % "test"
+)
 
-lazy val root = project.in(file("."))
+lazy val pathManager = project.in(file("."))
+  .enablePlugins(PlayScala, RiffRaffArtifact)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
-    // Never interested in the version number in the artifact name
-    name in Universal := normalizedName.value,
-    riffRaffArtifactPublishPath := normalizedName.value,
     scalaVersion := "2.11.6",
     scalaVersion in ThisBuild := "2.11.6",
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-Xfatal-warnings"),
     doc in Compile <<= target.map(_ / "none"),
-    fork in Test := false
-  ).aggregate(pathManager, migrator)
-
-lazy val pathManager = project.in(file("path-manager"))
-  .enablePlugins(PlayScala, RiffRaffArtifact)
-  .settings(
+    fork in Test := false,
     name := "path-manager",
-    name in Universal := normalizedName.value,
     playDefaultPort := 10000,
-    //riffRaffPackageType := (dist in Universal).value,
+    libraryDependencies ++= dependencies,
+    name in Universal := normalizedName.value,
     riffRaffPackageType := (packageZipTarball in config("universal")).value,
-    libraryDependencies ++= Seq(
-      ws,
-      "com.amazonaws" % "aws-java-sdk" % "1.9.23",
-      "org.apache.commons" % "commons-lang3" % "3.3.2",
-      "net.logstash.logback" % "logstash-logback-encoder" % "4.2",
-      "org.scalatestplus" %% "play" % "1.1.0" % "test"
-    )
-  )
-
-lazy val migrator = project.in(file("migrator"))
-  .enablePlugins(RiffRaffArtifact)
-  .settings(
-    name := "migrator",
-    mainClass in assembly := Some("com.gu.pathmanager.Migrator"),
-    assemblyJarName in assembly := "migrator.jar",
-    riffRaffPackageType := assembly.value,
-    riffRaffArtifactFile := "migrator.zip",
-    riffRaffArtifactPublishPath := "migrator",
-    resolvers += "Guardian Third-party Nexus" at "http://nexus.gudev.gnl:8081/nexus/content/repositories/thirdparty/", // for the oracle driver, because oracle are stupid
-    libraryDependencies ++= Seq(
-      "com.squareup.okhttp" % "okhttp" % "2.3.0",
-      "org.scalikejdbc" %% "scalikejdbc"  % "2.2.5",
-      "com.amazonaws" % "aws-java-sdk" % "1.9.23",
-      "org.apache.commons" % "commons-lang3" % "3.3.2",
-      "ch.qos.logback" % "logback-classic" % "1.1.2"
+    riffRaffPackageName := s"editorial-tools:${name.value}",
+    riffRaffManifestProjectName := riffRaffPackageName.value,
+    riffRaffBuildIdentifier :=  Option(System.getenv("CIRCLE_BUILD_NUM")).getOrElse("dev"),
+    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
+    riffRaffUploadManifestBucket := Option("riffraff-builds"),
+    riffRaffManifestBranch := Option(System.getenv("CIRCLE_BRANCH")).getOrElse("dev"),
+    riffRaffPackageType := (packageZipTarball in config("universal")).value,
+    riffRaffArtifactResources ++= Seq(
+      riffRaffPackageType.value -> s"packages/${name.value}/${name.value}.tgz",
+      baseDirectory.value / "cloudformation" / "permissions.json" ->
+        "packages/cloudformation/permissions.json"
     )
   )

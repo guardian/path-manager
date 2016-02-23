@@ -1,3 +1,6 @@
+machine:
+  java:
+    version: oraclejdk8
 dependencies:
   cache_directories:
     - "~/.sbt"
@@ -5,3 +8,13 @@ dependencies:
     - "target/streams"
     - "project/target/resolution-cache"
     - "project/target/streams"
+  override:
+    - sbt test:compile
+test:
+  override:
+    - sbt test
+  post:
+    - sbt riffRaffUpload
+general:
+  artifacts:
+    - "target/riffraff/artifacts.zip"
