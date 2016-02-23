@@ -17,7 +17,7 @@ lazy val dependencies = Seq(
   "org.scalatestplus" %% "play" % "1.1.0" % "test"
 )
 
-lazy val pathManager = project.in(file("."))
+lazy val pathManager = project.in(file("path-manager"))
   .enablePlugins(PlayScala, RiffRaffArtifact)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
