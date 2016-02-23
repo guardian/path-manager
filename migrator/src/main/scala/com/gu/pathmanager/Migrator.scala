@@ -4,13 +4,10 @@ import java.io._
 import java.sql.DriverManager
 import java.util.Properties
 import javax.sql.DataSource
-import oracle.jdbc.pool.OracleDataSource
 import scalikejdbc._
 
 
 class Migrator(conf: MigratorConfiguration) {
-
-  ConnectionPool.singleton(new DataSourceConnectionPool(dataSource(conf)))
 
   val pathManager = new PathManagerConnection(conf.pathManagerUrl)
 
@@ -137,26 +134,6 @@ class Migrator(conf: MigratorConfiguration) {
         println("leaving sequence value alone")
       }
     }
-  }
-
-
-  private def dataSource(conf: MigratorConfiguration): DataSource = {
-    val oracleDataSource = new OracleDataSource
-
-    oracleDataSource.setUser(conf.user)
-    oracleDataSource.setPassword(conf.password)
-    oracleDataSource.setDriverType("thin")
-    oracleDataSource.setServerName(conf.dbAddress)
-    oracleDataSource.setPortNumber(1521)
-    oracleDataSource.setServiceName(conf.dbService)
-
-    val properties = new Properties
-    properties.put("v$session.program", "path-manager-migrator")
-    oracleDataSource.setConnectionProperties(properties)
-
-
-    println(s"Connecting as ${conf.user} to ${conf.dbAddress} / ${conf.dbService}")
-    oracleDataSource
   }
 }
 
