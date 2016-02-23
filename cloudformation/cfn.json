@@ -353,7 +353,7 @@
                     { "Ref": "AppServerSecurityGroup" },
                     { "Ref": "SSHSecurityGroup" }
                 ],
-                "InstanceType": "t2.micro",
+                "InstanceType": "t2.nano",
                 "IamInstanceProfile": {"Ref": "PathManagerInstanceProfile"},
                 "UserData":{
                     "Fn::Base64":{
