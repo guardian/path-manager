@@ -1,7 +1,5 @@
 addCommandAlias("dist", ";riffRaffArtifact")
 
-import com.typesafe.sbt.packager.Keys._
-//import sbtassembly.Plugin.AssemblyKeys._
 import play.PlayImport.PlayKeys._
 
 name := "path-manager"
@@ -18,7 +16,7 @@ lazy val dependencies = Seq(
 )
 
 lazy val pathManager = project.in(file("path-manager"))
-  .enablePlugins(PlayScala, RiffRaffArtifact)
+  .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
     scalaVersion := "2.11.6",
@@ -29,18 +27,13 @@ lazy val pathManager = project.in(file("path-manager"))
     name := "path-manager",
     playDefaultPort := 10000,
     libraryDependencies ++= dependencies,
-    name in Universal := normalizedName.value,
+    packageName in Universal := normalizedName.value,
+    topLevelDirectory in Universal := Some(normalizedName.value),
     riffRaffPackageType := (packageZipTarball in config("universal")).value,
-    riffRaffPackageName := s"editorial-tools:${name.value}",
-    riffRaffManifestProjectName := riffRaffPackageName.value,
+    riffRaffPackageName := name.value,
+    riffRaffManifestProjectName := s"editorial-tools:${name.value}",
     riffRaffBuildIdentifier :=  Option(System.getenv("CIRCLE_BUILD_NUM")).getOrElse("dev"),
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
     riffRaffUploadManifestBucket := Option("riffraff-builds"),
-    riffRaffManifestBranch := Option(System.getenv("CIRCLE_BRANCH")).getOrElse("dev"),
-    riffRaffPackageType := (packageZipTarball in config("universal")).value,
-    riffRaffArtifactResources ++= Seq(
-      riffRaffPackageType.value -> s"packages/${name.value}/${name.value}.tgz",
-      baseDirectory.value / "cloudformation" / "permissions.json" ->
-        "packages/cloudformation/permissions.json"
-    )
+    riffRaffManifestBranch := Option(System.getenv("CIRCLE_BRANCH")).getOrElse("dev")
   )
