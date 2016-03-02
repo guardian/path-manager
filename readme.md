@@ -3,20 +3,21 @@ Path Manager
 
 Service that manages paths for a domain. Ensures they are unique etc.
 
-Rationale
-=========
+## Status
+
+[![Circle CI](https://circleci.com/gh/guardian/path-manager.svg?style=shield)](https://circleci.com/gh/guardian/path-manager)
+
+## Rationale
 
 In a microservice architecture there may be many services that produce and render content. If all such content appears
 a single domain (such as on theguardian.com) then there is potential for url collisions. This service manages a domain's
 url space and allows content production services to claim urls to ensure that they are unique.
 
-Operations
-==========
+## Operations
 
 The path manager exposes the following operations:
 
-Register a new path
--------------------
+### Register a new path
 
 To register a new path issue a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
 requested iff the the path is not currently in use. An id is also generated for to identify the object that the path links to,
@@ -54,8 +55,7 @@ returns
 ```
 
 
-Add (or update) an existing path
---------------------------------
+### Add (or update) an existing path
 
 This endpoint is used to migrate paths from existing systems, like the register new operation it registers a path but 
 this version uses the identifier provided by the client rather than generating a new id.
@@ -102,8 +102,7 @@ returns
 ```
 
 
-Update a canonical path
-----------------------
+### Update a canonical path
 
 To update a canonical path for an item issue a POST request to ```/paths/<id>``` with ```path``` parameter.
 If the new path is available then the old path entry is removed and the new record with the new path is inserted.
@@ -125,8 +124,7 @@ returns
 ```
 
 
-Looking up paths
-----------------
+### Looking up paths
 
 Paths can be looked up by id or searched by path. To lookup by id issue a GET request to ```/paths/<id>``` this will return and argo json response
 with all the paths registered for that id 
@@ -167,8 +165,7 @@ If a path is not found then the endpoint will respond with a 404 response. The l
 check if a path is in use (by checking if the response is a 404 or 200).
 
 
-Deleting all paths for an item
-------------------------------
+### Deleting all paths for an item
 
 To delete all path records for an item issue a DELETE request to ```/paths/<id>```. This will result is a 204, no content, response if successful.
 
@@ -184,15 +181,13 @@ will respond with a 204
 
 
 
-Not supported yet
-=================
+## Not supported yet
 
 The path manager does not currently support:
 
 * redirects - These may be added at a later date once the work on canonical paths is completed.
 
-Running locally
-===============
+## Running locally
 
 The path manager requires a local version of DynamoDB, to start this just run the ```setup.sh``` script in the project root,
 this will download the latest dynamo local from amazon and start it on port 10005. You can access
@@ -233,8 +228,7 @@ The path manager should now be accessible on:
    [https://pathmanager.local.dev-gutools.co.uk/debug](https://pathmanager.local.dev-gutools.co.uk/debug)
    
 
-Running a migration
-===================
+## Running a migration
 
 The migrator sub project produces a executable jar which will migrate data from an R2 database into the path manager.
 
