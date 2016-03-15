@@ -277,3 +277,18 @@ When you do the import you probably want to increase the write capacity on your 
 the throughput %age for the import job higher than the 20% it defaults to). If your job is going to run for some time you may need to update timeout
 set in the amazon job template, to do this open the job in the architect view and tinker with the settings (you can also increase the number of task
 runners, box sizes etc here.)
+
+Refreshing from PROD
+====================
+
+Occassionally there will be a need to refresh the path manager instance in a pre-prod stage with data from production.
+
+The pathmanager is backed by a DynamoDB database. To import/export data from it, use AWS Data Pipeline. See [here](http://docs.aws.amazon.com/datapipeline/latest/DeveloperGuide/dp-importexport-ddb.html) for instructions on how to do this. Some notes:
+ - Before starting, increase the read/write throughput of the table you are exporting/importing from. e.g. if exporting then increase the number of read capacity units to 500 for both the table and index.
+ - When creating the pipeline, set DynamoDB write throughput ratio to 0.95 (this is why we increase the throughput)
+ - For success/failure alerts, there's an sns topic called 'pipelinestatus' which you can link to your email address
+ - Exporting from the PROD table with 2 m3.xlarge instances took less than 10 minutes when I did it. Importing the PROD data set into the CODE with 2 m1.large instances took 3.5 hours.
+ - In the resources menu of 'edit in architect'
+   - Increase the timeout to something larger than 2 hours (12 was plenty for me)
+   - Increase the number of instances to 2 (this is what I did, I'm assuming it makes things a bit faster, but it's probably not worth putting it any higher)
+   - If exporting from PROD, I recommend using m3.xlarge instances - this solved some weird errors I was getting (see [here](http://ijin.github.io/blog/2015/07/02/dynamodb-export-with-datapipeline/) (with google translate!) for more details)
