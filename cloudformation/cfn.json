@@ -47,10 +47,6 @@
         }
     },
 
-    "Conditions":{
-        "IsProd": {"Fn::Equals" : [{"Ref":"Stage"}, "PROD"]}
-    },
-
     "Resources":{
 
         "PathManagerRole": {
@@ -344,8 +340,8 @@
                 "AvailabilityZones": {"Fn::GetAZs": ""},
                 "VPCZoneIdentifier": {"Ref": "PrivateVpcSubnets"},
                 "LaunchConfigurationName":{ "Ref":"PathManagerLaunchConfig" },
-                "MinSize": { "Fn::If" : [ "IsProd", 2, 1]},
-                "MaxSize": { "Fn::If" : [ "IsProd", 4, 2]},
+                "MinSize": 3,
+                "MaxSize": 6,
                 "HealthCheckType" : "ELB",
                 "HealthCheckGracePeriod": 300,
                 "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }, { "Ref": "InternalPathManagerLoadBalancer" }],
@@ -380,7 +376,7 @@
                     { "Ref": "AppServerSecurityGroup" },
                     { "Ref": "SSHSecurityGroup" }
                 ],
-                "InstanceType": "t2.nano",
+                "InstanceType": "t2.micro",
                 "IamInstanceProfile": {"Ref": "PathManagerInstanceProfile"},
                 "UserData":{
                     "Fn::Base64":{
