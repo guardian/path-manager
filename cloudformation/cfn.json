@@ -120,6 +120,23 @@
             }
         },
 
+        "PathManagerGetConfigPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "PathManagerGetConfigPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": ["s3:GetObject"],
+                            "Resource": ["arn:aws:s3:::path-manager-conf/*"]
+                        }
+                    ]
+                },
+                "Roles": [{"Ref": "PathManagerRole"}]
+            }
+        },
+
         "PathManagerCloudwatchPolicy" : {
             "Type": "AWS::IAM::Policy",
             "Properties": {
@@ -408,6 +425,12 @@
                             { "Fn::Join": [ "",
                                 ["/opt/features/ssh-keys/initialise-keys-and-cron-job.sh -b github-team-keys -t ", {"Ref":"GithubTeamName"}, " -l || true\n"]
                             ]},
+                            "mkdir /etc/gu\n",
+                            "aws s3 cp 's3://path-manager-conf/",
+                            {
+                                "Ref": "Stage"
+                            },
+                            "/path-manager.private.conf' /etc/gu\n",
                             "/opt/features/native-packager/install.sh -b composer-dist -t tgz -s\n"
                         ]]
                     }
