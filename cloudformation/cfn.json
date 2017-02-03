@@ -173,7 +173,7 @@
                         }
                     ]
                 },
-                "Roles": [{"Ref":"ViewerRole"}]
+                "Roles": [{"Ref":"PathManagerRole"}]
             }
         },
 
