@@ -137,6 +137,29 @@
             }
         },
 
+        "LoggingKinesisStreamPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "LoggingKinesisStreamPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Resource": [
+                                "arn:aws:kinesis:*:*:stream/elk-*-KinesisStream-*"
+                            ],
+                            "Action": [
+                                "kinesis:PutRecord",
+                                "kinesis:PutRecords",
+                                "kinesis:DescribeStream"
+                            ],
+                            "Effect": "Allow"
+                        }
+                    ]
+                },
+                "Roles": [{"Ref":"ViewerRole"}]
+            }
+        },
+
         "PathManagerInstanceProfile": {
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {

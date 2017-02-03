@@ -1,9 +1,9 @@
 import play.api.{Application, GlobalSettings}
-import services.LogstashBootstrapper
+import services.KinesisLogging
 
 object Global extends GlobalSettings {
 
   override def beforeStart(app: Application) {
-    LogstashBootstrapper.bootstrap
+    KinesisLogging.init()
   }
 }
