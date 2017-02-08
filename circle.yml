@@ -13,9 +13,6 @@ dependencies:
 test:
   override:
     - sbt test
-general:
-  artifacts:
-    - "target/riffraff/artifacts.zip"
 deployment:
   riffraff_upload:
     branch: /.*/

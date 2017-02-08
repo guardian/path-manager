@@ -1,0 +1,7 @@
+stacks: [flexible]
+regions: [eu-west-1]
+deployments:
+  path-manager:
+    type: autoscaling
+    parameters:
+      bucket: composer-dist
