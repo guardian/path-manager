@@ -1,9 +1,10 @@
 package services
 
-import com.amazonaws.auth.BasicAWSCredentials
-import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClient
-import com.amazonaws.services.dynamodbv2.document.{Item, DynamoDB}
+import com.amazonaws.auth.{AWSStaticCredentialsProvider, BasicAWSCredentials}
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
+import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
 import com.amazonaws.services.dynamodbv2.model._
+import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
 import play.api.Logger
 
 object Dynamo extends AwsInstanceTags {
@@ -11,11 +12,14 @@ object Dynamo extends AwsInstanceTags {
   lazy val stageTablePrefix = readTag("Stage").getOrElse("DEV")
 
   lazy val dynamoDb = new DynamoDB( instanceId match {
-    case Some(_) => AWS.region.createClient(classOf[AmazonDynamoDBClient], null, null)
-    case None => {
-      val c = new AmazonDynamoDBClient(new BasicAWSCredentials("local", "local"))
+    case Some(_) =>
+      AmazonDynamoDBClientBuilder.standard().withRegion(AWS.region).build()
 
-      c.setEndpoint("http://localhost:10005")
+    case None => {
+      val c = AmazonDynamoDBClientBuilder.standard()
+        .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("local", "local")))
+        .withEndpointConfiguration(new EndpointConfiguration("http://localhost:10005", "local"))
+        .build()
 
       createSequenceTableIfMissing(c)
       initialiseSequences(c)
@@ -30,7 +34,7 @@ object Dynamo extends AwsInstanceTags {
   lazy val sequenceTable = dynamoDb.getTable(sequenceTableName)
   lazy val pathsTable = dynamoDb.getTable(pathsTableName)
 
-  private def createSequenceTableIfMissing(client: AmazonDynamoDBClient) {
+  private def createSequenceTableIfMissing(client: AmazonDynamoDB) {
     val dynamo = new DynamoDB(client)
 
     if(!tableExists(sequenceTableName, dynamo)) {
@@ -48,7 +52,7 @@ object Dynamo extends AwsInstanceTags {
     }
   }
 
-  private def initialiseSequences(client: AmazonDynamoDBClient) {
+  private def initialiseSequences(client: AmazonDynamoDB) {
     val table = new DynamoDB(client).getTable(sequenceTableName)
     if (Option(table.getItem("sequenceName", "ids")).isEmpty){
       Logger.info("initialising id sequence")
@@ -56,7 +60,7 @@ object Dynamo extends AwsInstanceTags {
     }
   }
 
-  private def createPathsTableIfMissing(client: AmazonDynamoDBClient) {
+  private def createPathsTableIfMissing(client: AmazonDynamoDB) {
     val dynamo = new DynamoDB(client)
 
     if(!tableExists(pathsTableName, dynamo)) {

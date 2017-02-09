@@ -17,11 +17,6 @@
             "Type": "AWS::EC2::VPC::Id",
             "Default": "vpc-381fa95d"
         },
-        "PublicVpcSubnets": {
-            "Description": "Subnets to use in VPC for public internet-facing ELB eg. subnet-abcd1234",
-            "Type": "List<AWS::EC2::Subnet::Id>",
-            "Default": "subnet-c3620fa6,subnet-2b37bd5c,subnet-3667c86f"
-        },
         "PrivateVpcSubnets": {
             "Description": "Subnets to use in VPC for private EC2 instances eg. subnet-abcd1234",
             "Type": "List<AWS::EC2::Subnet::Id>",
@@ -31,14 +26,10 @@
             "Description": "AMI id from the machine-images repo",
             "Type": "AWS::EC2::Image::Id"
         },
-        "SSLCertificateARN": {
-            "Description": "The ARN of the SSL certificate to use in the ELB",
-            "Type": "String"
-        },
-        "GuardianIP": {
-            "Description": "Ip range for the office",
+        "DigDevBubble": {
+            "Description": "Ip range for the digdev bubble",
             "Type": "String",
-            "Default": "77.91.248.0/21"
+            "Default": "10.249.16.0/22"
         },
         "GithubTeamName": {
             "Description": "Github team name, used for giving ssh access to members of the team.",
@@ -120,6 +111,23 @@
             }
         },
 
+        "PathManagerGetConfigPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "PathManagerGetConfigPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Effect": "Allow",
+                            "Action": ["s3:GetObject"],
+                            "Resource": ["arn:aws:s3:::guconf-flexible/path-manager/*"]
+                        }
+                    ]
+                },
+                "Roles": [{"Ref": "PathManagerRole"}]
+            }
+        },
+
         "PathManagerCloudwatchPolicy" : {
             "Type": "AWS::IAM::Policy",
             "Properties": {
@@ -134,6 +142,29 @@
                     ]
                 },
                 "Roles": [ { "Ref": "PathManagerRole" } ]
+            }
+        },
+
+        "LoggingKinesisStreamPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "LoggingKinesisStreamPolicy",
+                "PolicyDocument": {
+                    "Statement": [
+                        {
+                            "Resource": [
+                                "arn:aws:kinesis:*:*:stream/elk-*-KinesisStream-*"
+                            ],
+                            "Action": [
+                                "kinesis:PutRecord",
+                                "kinesis:PutRecords",
+                                "kinesis:DescribeStream"
+                            ],
+                            "Effect": "Allow"
+                        }
+                    ]
+                },
+                "Roles": [{"Ref":"PathManagerRole"}]
             }
         },
 
@@ -193,89 +224,13 @@
                         "IpProtocol": "tcp",
                         "FromPort": 9000,
                         "ToPort": 9000,
-                        "CidrIp": {"Ref": "GuardianIP"}
-                    },
-                    {
-                        "IpProtocol": "tcp",
-                        "FromPort": 9000,
-                        "ToPort": 9000,
-                        "SourceSecurityGroupId": { "Ref": "PublicLoadBalancerSecurityGroup"}
+                        "CidrIp": {"Ref": "DigDevBubble"}
                     },
                     {
                         "IpProtocol": "tcp",
                         "FromPort": 9000,
                         "ToPort": 9000,
                         "SourceSecurityGroupId": { "Ref": "InternalLoadBalancerSecurityGroup"}
-                    }
-                ]
-            }
-        },
-
-        "PublicLoadBalancerSecurityGroup": {
-            "Type": "AWS::EC2::SecurityGroup",
-            "Properties": {
-                "GroupDescription": "path manager application load balancer",
-                "VpcId": {"Ref": "VpcId"},
-                "SecurityGroupIngress": [
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.251.206/31" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.252.206/31" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "77.91.251.220/31" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.72.146.251/32" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.55.123/32" },
-                    { "IpProtocol": "tcp", "FromPort": "443", "ToPort": "443", "CidrIp": "54.154.66.109/32" },
-
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.251.206/31" },
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.252.206/31" },
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "77.91.251.220/31" },
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.72.146.251/32" },
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.154.55.123/32" },
-                    { "IpProtocol": "tcp", "FromPort": "80", "ToPort": "80", "CidrIp": "54.154.66.109/32" }
-                ]
-            }
-        },
-
-        "PublicPathManagerLoadBalancer" : {
-            "Type" : "AWS::ElasticLoadBalancing::LoadBalancer",
-            "Properties" : {
-                "SecurityGroups": [{ "Fn::GetAtt": ["PublicLoadBalancerSecurityGroup", "GroupId"] }],
-                "CrossZone": true,
-                "Subnets": {"Ref": "PublicVpcSubnets"},
-                "Listeners" : [ {
-                    "LoadBalancerPort": "443",
-                    "InstancePort": "9000",
-                    "Protocol": "HTTPS",
-                    "SSLCertificateId": { "Ref": "SSLCertificateARN"}
-                },{
-                    "LoadBalancerPort": "80",
-                    "InstancePort": "9000",
-                    "Protocol": "HTTP"
-                } ],
-
-                "HealthCheck" : {
-                    "Target" : "HTTP:9000/management/healthcheck",
-                    "HealthyThreshold" : "2",
-                    "UnhealthyThreshold" : "2",
-                    "Interval" : "10",
-                    "Timeout" : "5"
-                },
-                "Tags":[
-                    {
-                        "Key":"Stage",
-                        "Value":{
-                            "Ref":"Stage"
-                        }
-                    },
-                    {
-                        "Key": "Stack",
-                        "Value": "flexible"
-                    },
-                    {
-                        "Key":"App",
-                        "Value":"path-manager"
-                    },
-                    {
-                        "Key":"Loadbalancer",
-                        "Value":"internet-facing"
                     }
                 ]
             }
@@ -344,7 +299,7 @@
                 "MaxSize": 6,
                 "HealthCheckType" : "ELB",
                 "HealthCheckGracePeriod": 300,
-                "LoadBalancerNames" : [ { "Ref": "PublicPathManagerLoadBalancer" }, { "Ref": "InternalPathManagerLoadBalancer" }],
+                "LoadBalancerNames" : [ { "Ref": "InternalPathManagerLoadBalancer" }],
                 "Tags":[
                     {
                         "Key":"Stage",
@@ -385,6 +340,12 @@
                             { "Fn::Join": [ "",
                                 ["/opt/features/ssh-keys/initialise-keys-and-cron-job.sh -b github-team-keys -t ", {"Ref":"GithubTeamName"}, " -l || true\n"]
                             ]},
+                            "mkdir /etc/gu\n",
+                            "aws s3 cp 's3://guconf-flexible/path-manager/",
+                            {
+                                "Ref": "Stage"
+                            },
+                            ".conf' /etc/gu/path-manager.private.conf\n",
                             "/opt/features/native-packager/install.sh -b composer-dist -t tgz -s\n"
                         ]]
                     }
