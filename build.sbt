@@ -1,6 +1,7 @@
 addCommandAlias("dist", ";riffRaffArtifact")
 
-import play.PlayImport.PlayKeys._
+import play.sbt.PlayImport.PlayKeys._
+import com.typesafe.sbt.packager.archetypes.ServerLoader.Systemd
 
 name := "path-manager"
 
@@ -17,9 +18,24 @@ lazy val dependencies = Seq(
 )
 
 lazy val pathManager = project.in(file("path-manager"))
-  .enablePlugins(PlayScala, RiffRaffArtifact, UniversalPlugin)
+  .enablePlugins(PlayScala, RiffRaffArtifact, JDebPackaging)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
+    javaOptions in Universal ++= Seq(
+      "-Dpidfile.path=/dev/null",
+      "-J-XX:MaxRAMFraction=2",
+      "-J-XX:InitialRAMFraction=2",
+      "-J-XX:MaxMetaspaceSize=500m",
+      "-J-XX:+UseConcMarkSweepGC",
+      "-J-XX:+PrintGCDetails",
+      "-J-XX:+PrintGCDateStamps",
+      s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
+    ),
+    serverLoading in Debian := Systemd,
+    debianPackageDependencies := Seq("openjdk-8-jre-headless"),
+    maintainer := "Editorial Tools Developers <digitalcms.dev@theguardian.com>",
+    packageSummary := description.value,
+    packageDescription := description.value,
     scalaVersion := "2.11.6",
     scalaVersion in ThisBuild := "2.11.6",
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-Xfatal-warnings"),
@@ -30,7 +46,7 @@ lazy val pathManager = project.in(file("path-manager"))
     libraryDependencies ++= dependencies,
     packageName in Universal := normalizedName.value,
     topLevelDirectory in Universal := Some(normalizedName.value),
-    riffRaffPackageType := (packageZipTarball in config("universal")).value,
+    riffRaffPackageType := (packageBin in Debian).value,
     riffRaffPackageName := name.value,
     riffRaffManifestProjectName := s"editorial-tools:${name.value}",
     riffRaffBuildIdentifier :=  Option(System.getenv("CIRCLE_BUILD_NUM")).getOrElse("dev"),
