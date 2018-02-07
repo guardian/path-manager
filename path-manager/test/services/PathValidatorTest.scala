@@ -8,15 +8,27 @@ class PathValidatorTest extends PlaySpec {
       PathValidator.isValid("path/to/something") must be(true)
       PathValidator.isValid("path/to/something-else") must be(true)
       PathValidator.isValid("global/2018/foo-bar") must be(true)
-      PathValidator.isValid("p/2nfpb") must be(true)
+    }
+
+    "accept a path with a hyphenated starting section" in {
+      PathValidator.isValid("uk-news/2018/feb/07/foo-bar") must be(true)
+    }
+
+    "reject a path when upper cased" in {
+      PathValidator.isValid("PATH/TO/SOMETHING") must be(false)
     }
 
     "reject a path starting with a hyphen" in {
       PathValidator.isValid("-in/valid") must be(false)
+      PathValidator.isValid("-in-valid/path") must be(false)
     }
 
     "reject a path starting with a slash" in {
       PathValidator.isValid("/some/content") must be(false)
+    }
+
+    "reject a path with two adjacent slashes" in {
+      PathValidator.isValid("path//to/something") must be(false)
     }
 
     "reject paths with white space" in {
