@@ -44,5 +44,9 @@ class PathValidatorTest extends PlaySpec {
     "reject paths with a combination of single quotes and white space" in {
       PathValidator.isValid("path/to/'something' else-news") must be(false)
     }
+
+    "reject a path with a hyphen after a slash" in {
+      PathValidator.isValid("path/to/-something") must be(false)
+    }
   }
 }
