@@ -8,10 +8,12 @@ import scala.collection.JavaConversions._
 import scala.util.matching.Regex
 
 object PathValidator {
-  val validPathRegex = new Regex("^[a-z0-9]+(/[a-z0-9-]+)*$")
+  val validPathRegex = new Regex("^[a-z0-9][a-z0-9-]*(/[a-z0-9][a-z0-9-]*)*$")
 
   def isValid(path: String): Boolean = {
-    validPathRegex.pattern.matcher(path).matches()
+    val matches = validPathRegex.pattern.matcher(path).matches()
+    if (!matches) Logger.warn(s"path fails validation [$path]")
+    matches
   }
 }
 
