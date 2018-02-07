@@ -1,19 +1,17 @@
 package services
 
-import java.util.regex.Pattern
-
+import com.amazonaws.services.dynamodbv2.document.{KeyAttribute, RangeKeyCondition}
 import model.PathRecord
 import play.api.Logger
 
 import scala.collection.JavaConversions._
-import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, Item, KeyAttribute, RangeKeyCondition}
-
 import scala.util.matching.Regex
 
 object PathValidator {
+  val validPathRegex = new Regex("^[a-z0-9]+(/[a-z0-9-]+)*$")
+
   def isValid(path: String): Boolean = {
-    val re = new Regex("^[a-z0-9]+(/[a-z0-9-]+)*$")
-    re.pattern.matcher(path).matches()
+    validPathRegex.pattern.matcher(path).matches()
   }
 }
 
