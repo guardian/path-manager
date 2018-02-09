@@ -9,6 +9,7 @@ deployments:
         Recipe: editorial-tools-xenial-java8
         AmigoStage: PROD
         BuiltBy: amigo
+      amiEncrypted: true
   path-manager:
     type: autoscaling
     parameters:
