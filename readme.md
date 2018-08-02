@@ -3,10 +3,6 @@ Path Manager
 
 Service that manages paths for a domain. Ensures they are unique etc.
 
-## Status
-
-[![Circle CI](https://circleci.com/gh/guardian/path-manager.svg?style=shield)](https://circleci.com/gh/guardian/path-manager)
-
 ## Rationale
 
 In a microservice architecture there may be many services that produce and render content. If all such content appears
