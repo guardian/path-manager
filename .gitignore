@@ -11,3 +11,4 @@ logs/*
 .history
 
 */logs/*
+Brewfile.lock.json
