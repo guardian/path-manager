@@ -5,5 +5,3 @@ services:
       image: amazon/dynamodb-local
       ports: 
         - 10005:8000
-      expose: 
-        - 8000
