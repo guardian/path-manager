@@ -197,7 +197,7 @@ on port 10000.
     
 The path manager should now be accessible on:
 
-   [https://pathmanager.local.dev-gutools.co.uk/debug](pathmanager.local.dev-gutools.co.uk/debug)
+   [https://pathmanager.local.dev-gutools.co.uk/](pathmanager.local.dev-gutools.co.uk/)
    
 
 ## Running a migration
