@@ -2,3 +2,5 @@ name: pathmanager
 mappings:
   - prefix: pathmanager
     port: 10000
+  - prefix: pathmanager-db
+    port: 10005
