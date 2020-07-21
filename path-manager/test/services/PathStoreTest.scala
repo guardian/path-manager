@@ -61,6 +61,35 @@ class PathStoreTest extends PlaySpec with DockerDynamoTestBase with BeforeAndAft
 
     }
 
+    "support deleting all path entries" in {
+
+      val pathsForDeletion = PathStore.registerNew(firstPath, system).fold(errorMessage => {
+        fail(s"PathStore.registerNew resulted in a Left($errorMessage)")
+        List()
+      }, _.values.flatten)
+
+      pathsForDeletion.size shouldBe 2 // one canonical and one short
+
+      pathsForDeletion.map(_.path).map(PathStore.getPathDetails).foreach {
+        _ should not be None
+      }
+
+      PathStore.getPathDetails(firstPath).map(_.identifier).fold(
+
+        fail("newly created path not there after supposedly successful creation")
+
+      ){id =>
+
+        PathStore.deleteRecord(id)
+
+        pathsForDeletion.map(_.path).map(PathStore.getPathDetails).foreach(
+          _ shouldBe None
+        )
+
+      }
+
+    }
+
   }
 
 }
