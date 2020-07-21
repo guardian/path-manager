@@ -11,27 +11,27 @@ object Dynamo extends AwsInstanceTags with Logging {
 
   val LOCAL_PORT = 10005
 
-  lazy val stageTablePrefix = readTag("Stage").getOrElse("DEV")
+  lazy val stage: String = readTag("Stage").getOrElse("DEV")
 
   lazy val dynamoDb = new DynamoDB( instanceId match {
-    case Some(_) =>
+    case Some(_) if stage != "DEVINFRA" =>
       AmazonDynamoDBClientBuilder.standard().withRegion(AWS.region).build()
 
-    case None => {
-      val c = AmazonDynamoDBClientBuilder.standard()
+    case _ => {
+      val client = AmazonDynamoDBClientBuilder.standard()
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("local", "local")))
         .withEndpointConfiguration(new EndpointConfiguration(s"http://localhost:$LOCAL_PORT", "local"))
         .build()
 
-      createSequenceTableIfMissing(c)
-      initialiseSequences(c)
-      createPathsTableIfMissing(c)
-      c
+      createSequenceTableIfMissing(client)
+      initialiseSequences(client)
+      createPathsTableIfMissing(client)
+      client
     }
   })
 
-  private lazy val sequenceTableName = s"$stageTablePrefix-pathManager-sequence"
-  private lazy val pathsTableName = s"$stageTablePrefix-pathManager-paths"
+  private lazy val sequenceTableName = s"$stage-pathManager-sequence"
+  private lazy val pathsTableName = s"$stage-pathManager-paths"
 
   lazy val sequenceTable = dynamoDb.getTable(sequenceTableName)
   lazy val pathsTable = dynamoDb.getTable(pathsTableName)
