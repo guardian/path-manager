@@ -9,6 +9,8 @@ import play.api.{Logger, Logging}
 
 object Dynamo extends AwsInstanceTags with Logging {
 
+  val LOCAL_PORT = 10005
+
   lazy val stageTablePrefix = readTag("Stage").getOrElse("DEV")
 
   lazy val dynamoDb = new DynamoDB( instanceId match {
@@ -18,7 +20,7 @@ object Dynamo extends AwsInstanceTags with Logging {
     case None => {
       val c = AmazonDynamoDBClientBuilder.standard()
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("local", "local")))
-        .withEndpointConfiguration(new EndpointConfiguration("http://localhost:10005", "local"))
+        .withEndpointConfiguration(new EndpointConfiguration(s"http://localhost:$LOCAL_PORT", "local"))
         .build()
 
       createSequenceTableIfMissing(c)
