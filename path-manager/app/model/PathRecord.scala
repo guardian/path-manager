@@ -16,8 +16,8 @@ object PathRecord {
 
   def apply(item: Item): PathRecord = PathRecord(
     path = item.getString("path"),
-    `type` = item.getString("type"),
     identifier = item.getLong("identifier"),
+    `type` = item.getString("type"),
     system = item.getString("system")
   )
 }
