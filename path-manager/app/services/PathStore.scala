@@ -1,6 +1,8 @@
 package services
 
+import com.amazonaws.services.dynamodbv2.datamodeling.{DynamoDBTransactionWriteExpression, TransactionWriteRequest}
 import com.amazonaws.services.dynamodbv2.document.{KeyAttribute, RangeKeyCondition}
+import com.amazonaws.services.dynamodbv2.model.{AttributeValue, ConditionCheck, Put}
 import model.PathRecord
 import play.api.Logger
 
@@ -28,20 +30,36 @@ object PathStore {
     } else {
       val existingPath = Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
 
+//      val twr = new TransactionWriteRequest()
+//      Dynamo.client.transactWriteItems(twr)
+
+
       existingPath match {
         case Some(pr) => {
           Logger.warn(s"Failed to register new path [$path], already claimed by id [${pr.identifier}]")
           Left("path already in use")
         }
         case None => {
+
+          val pathExistsCheck =  new ConditionCheck().withTableName(Dynamo.pathsTable.getTableName).withKey(Map("path"-> new AttributeValue(path))).withExpressionAttributeValues(Map("path"-> null))
           val id = IdentifierSequence.getNextId
+          val idCheck = new ConditionCheck()
+            .withTableName(Dynamo.sequenceTable.getTableName)
+            .withKey(Map("sequenceName" -> new AttributeValue("ids")))
+            .withExpressionAttributeValues(Map("value"->  (new AttributeValue).withN(id.toString)))
           Logger.debug(s"generated id [$id] path [$path]")
           val pathRecord = PathRecord(path, id, "canonical", system)
           val shortUrlPathRecord = PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", system)
-
-          putPathItemAndAwaitIndexUpdate(pathRecord)
+//          twr.addConditionCheck(idCheck)
+//          awaitIndexUpdate(pathRecord)
           Logger.debug(s"Adding new short url record for [$id]. short path[${shortUrlPathRecord.path }]")
-          Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
+          val putPath = new Put().withTableName(Dynamo.pathsTable.getTableName).withItem(pathRecord.asDynamoItem)
+          val putShortPath = new Put().withTableName(Dynamo.pathsTable.getTableName).withItem(shortUrlPathRecord.asDynamoItem)
+          val things = new List(idCheck, pathExistsCheck, putPath, putShortPath)
+
+//          Dynamo.pathsTable.putItem(pathRecord.asDynamoItem)
+
+//          Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
 
           Logger.debug(s"Registered path [$path}] for id [$id] successfully")
           Right(List(pathRecord, shortUrlPathRecord).groupBy(_.`type`))

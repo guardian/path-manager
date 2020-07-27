@@ -10,7 +10,7 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 version := "1.0"
 
 lazy val dependencies = Seq(
-  "com.amazonaws" % "aws-java-sdk" % "1.11.86",
+  "com.amazonaws" % "aws-java-sdk" % "1.11.825",
   "org.apache.commons" % "commons-lang3" % "3.3.2",
   "net.logstash.logback" % "logstash-logback-encoder" % "4.5.1",
   "com.gu" % "kinesis-logback-appender" % "1.3.0",

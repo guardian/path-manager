@@ -11,7 +11,7 @@ object Dynamo extends AwsInstanceTags {
 
   lazy val stageTablePrefix = readTag("Stage").getOrElse("DEV")
 
-  lazy val dynamoDb = new DynamoDB( instanceId match {
+  lazy val client: AmazonDynamoDB = instanceId match {
     case Some(_) =>
       AmazonDynamoDBClientBuilder.standard().withRegion(AWS.region).build()
 
@@ -26,7 +26,8 @@ object Dynamo extends AwsInstanceTags {
       createPathsTableIfMissing(c)
       c
     }
-  })
+  }
+  lazy val dynamoDb = new DynamoDB( client)
 
   private lazy val sequenceTableName = s"$stageTablePrefix-pathManager-sequence"
   private lazy val pathsTableName = s"$stageTablePrefix-pathManager-paths"
