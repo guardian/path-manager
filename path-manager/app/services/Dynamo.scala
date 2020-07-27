@@ -5,9 +5,9 @@ import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration
 import com.amazonaws.services.dynamodbv2.document.{DynamoDB, Item}
 import com.amazonaws.services.dynamodbv2.model._
 import com.amazonaws.services.dynamodbv2.{AmazonDynamoDB, AmazonDynamoDBClientBuilder}
-import play.api.Logger
+import play.api.{Logger, Logging}
 
-object Dynamo extends AwsInstanceTags {
+object Dynamo extends AwsInstanceTags with Logging {
 
   lazy val stageTablePrefix = readTag("Stage").getOrElse("DEV")
 
@@ -34,11 +34,11 @@ object Dynamo extends AwsInstanceTags {
   lazy val sequenceTable = dynamoDb.getTable(sequenceTableName)
   lazy val pathsTable = dynamoDb.getTable(pathsTableName)
 
-  private def createSequenceTableIfMissing(client: AmazonDynamoDB) {
+  private def createSequenceTableIfMissing(client: AmazonDynamoDB) = {
     val dynamo = new DynamoDB(client)
 
     if(!tableExists(sequenceTableName, dynamo)) {
-      Logger.info("creating sequence table")
+      logger.info("creating sequence table")
       val table = dynamo.createTable(
         new CreateTableRequest()
           .withTableName(sequenceTableName)
@@ -48,23 +48,23 @@ object Dynamo extends AwsInstanceTags {
       )
       table.waitForActive()
     } else {
-      Logger.info("sequence table already exists")
+      logger.info("sequence table already exists")
     }
   }
 
-  private def initialiseSequences(client: AmazonDynamoDB) {
+  private def initialiseSequences(client: AmazonDynamoDB) = {
     val table = new DynamoDB(client).getTable(sequenceTableName)
     if (Option(table.getItem("sequenceName", "ids")).isEmpty){
-      Logger.info("initialising id sequence")
+      logger.info("initialising id sequence")
       table.putItem(new Item().withString("sequenceName", "ids").withLong("value", 2000000L))
     }
   }
 
-  private def createPathsTableIfMissing(client: AmazonDynamoDB) {
+  private def createPathsTableIfMissing(client: AmazonDynamoDB) = {
     val dynamo = new DynamoDB(client)
 
     if(!tableExists(pathsTableName, dynamo)) {
-      Logger.info("creating paths table")
+      logger.info("creating paths table")
       val table = dynamo.createTable(
         new CreateTableRequest()
           .withTableName(pathsTableName)
@@ -85,7 +85,7 @@ object Dynamo extends AwsInstanceTags {
       )
       table.waitForActive()
     } else {
-      Logger.info("paths table already exists")
+      logger.info("paths table already exists")
     }
   }
 

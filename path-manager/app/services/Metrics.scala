@@ -1,16 +1,16 @@
 package services
 
-import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 import java.util.Date
+import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
+
+import akka.actor.{Actor, ActorSystem, Props}
+import com.amazonaws.services.cloudwatch.model._
+
+import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 import scala.language.postfixOps
-import scala.concurrent.ExecutionContext.Implicits.global
-import akka.actor.{Actor, Props}
-import com.amazonaws.services.cloudwatch.model._
-import play.api.libs.concurrent.Akka
-import play.api.Play.current
 
-object Metrics {
+class Metrics(actorSystem: ActorSystem) {
 
   val PathRegistrations = new CountMetric("pathRegistrations")
   val PathMigrationRegistrations = new CountMetric("pathMigrationRegistrations")
@@ -28,7 +28,7 @@ object Metrics {
     PathOperationErrors
   )
 
-  private val reporter = new CloudWatchReporter(all)
+  private val reporter = new CloudWatchReporter(all, actorSystem)
   reporter.start
 
 }
@@ -46,7 +46,7 @@ class TimingMetric(metricName: String) extends CloudWatchMetric {
 
   private val _times = new AtomicReference[List[Long]](Nil)
 
-  def recordTimeSpent(durationInMillis: Long) {
+  def recordTimeSpent(durationInMillis: Long) = {
     _times.set(durationInMillis :: _times.get())
   }
 
@@ -63,10 +63,10 @@ class TimingMetric(metricName: String) extends CloudWatchMetric {
       Nil
     } else {
       val stats = new StatisticSet()
-        .withMaximum(timeData.max)
-        .withMinimum(timeData.min)
-        .withSum(timeData.sum)
-        .withSampleCount(timeData.size)
+        .withMaximum(timeData.max.toDouble)
+        .withMinimum(timeData.min.toDouble)
+        .withSum(timeData.sum.toDouble)
+        .withSampleCount(timeData.size.toDouble)
       Seq(new MetricDatum()
         .withMetricName(metricName)
         .withStatisticValues(stats)
@@ -80,8 +80,8 @@ class TimingMetric(metricName: String) extends CloudWatchMetric {
 class CountMetric(metricName: String) extends CloudWatchMetric {
   val _count = new AtomicLong()
 
-  def recordCount(c: Long) { _count.addAndGet(c) }
-  def increment { _count.incrementAndGet }
+  def recordCount(c: Long) = { _count.addAndGet(c) }
+  def increment = { _count.incrementAndGet }
 
   override def flush(dimensions: Dimension*) = Seq(
     new MetricDatum()
@@ -93,22 +93,20 @@ class CountMetric(metricName: String) extends CloudWatchMetric {
   )
 }
 
-class CloudWatchReporter(metrics: Seq[CloudWatchMetric]) extends AwsInstanceTags {
+class CloudWatchReporter(metrics: Seq[CloudWatchMetric], actorSystem: ActorSystem) extends AwsInstanceTags {
 
   lazy val stageOpt = readTag("Stage")
   lazy val appOpt = readTag("App")
 
-  val system = Akka.system
-
-  def start {
+  def start = {
 
     for (
       app <- appOpt;
       stage <- stageOpt
     ) {
-      system.scheduler.scheduleOnce(
+      actorSystem.scheduler.scheduleOnce(
         delay = 1 minute,
-        receiver = system.actorOf(Props(new CloudWatchReportActor(app, stage))),
+        receiver = actorSystem.actorOf(Props(new CloudWatchReportActor(app, stage))),
         message = ReportMetrics
       )
     }
@@ -128,14 +126,14 @@ class CloudWatchReporter(metrics: Seq[CloudWatchMetric]) extends AwsInstanceTags
 
         val metricData = new PutMetricDataRequest().withNamespace("AppMetrics").withMetricData(data: _*)
         AWS.CloudWatch.putMetricDataAsync(metricData)
-        reschedule
+        reschedule()
       }
     }
 
-    private def reschedule() {
+    private def reschedule() = {
       context.system.scheduler.scheduleOnce(1 minute, self, ReportMetrics)
     }
 
-    override def postRestart(reason: Throwable) { reschedule }
+    override def postRestart(reason: Throwable) = { reschedule() }
   }
 }

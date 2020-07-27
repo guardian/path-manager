@@ -13,4 +13,4 @@ GET     /updateIdSeq                        controllers.PathManagerController.sh
 POST    /updateIdSeq                        controllers.PathManagerController.updateIdSeq
 
 # Management
-GET     /management/healthcheck             controllers.Management.healthCheck
+GET     /management/healthcheck             controllers.ManagementController.healthCheck

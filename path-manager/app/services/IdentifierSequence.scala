@@ -18,7 +18,7 @@ object IdentifierSequence {
     Dynamo.sequenceTable.getItem("sequenceName", "ids").getLong("value")
   }
 
-  def setCurrentId(v: Long) {
+  def setCurrentId(v: Long) = {
     Dynamo.sequenceTable.putItem(new Item().withString("sequenceName", "ids").withLong("value", v))
   }
 }

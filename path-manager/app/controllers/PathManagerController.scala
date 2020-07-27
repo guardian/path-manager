@@ -1,14 +1,15 @@
 package controllers
 
 import model.PathRecord
-import play.api.Logger
+import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
-import play.api.mvc.{Action, Controller}
-import services.{IdentifierSequence, PathStore}
-import services.Metrics._
+import play.api.mvc.{BaseController, ControllerComponents}
+import services.{IdentifierSequence, Metrics, PathStore}
 
 
-object PathManagerController extends Controller {
+class PathManagerController(override val controllerComponents: ControllerComponents, metrics: Metrics) extends BaseController with Logging {
+
+  import metrics._
 
   def registerNewPath = Action { request =>
     val submission = request.body.asFormUrlEncoded.get
@@ -31,11 +32,11 @@ object PathManagerController extends Controller {
     request.body.asJson.map(_.as[PathRecord]).map { submission =>
       if (id != submission.identifier) {
         PathOperationErrors.increment
-        Logger.warn("registerExistingPath failed, identifier in url and body do not match")
+        logger.warn("registerExistingPath failed, identifier in url and body do not match")
         BadRequest("identifier in url and body do not match")
       } else if (submission.`type` != "canonical") {
         PathOperationErrors.increment
-        Logger.warn("registerExistingPath failed, only canonical paths can be updated at present")
+        logger.warn("registerExistingPath failed, only canonical paths can be updated at present")
         BadRequest("only canonical paths can be updated at present")
       } else {
         PathStore.register(submission) match {
@@ -48,7 +49,7 @@ object PathManagerController extends Controller {
       }
     } getOrElse{
       PathOperationErrors.increment
-      Logger.warn("registerExistingPath failed, unable to parse PathRecord from request body")
+      logger.warn("registerExistingPath failed, unable to parse PathRecord from request body")
       BadRequest("unable to parse PathRecord from request body")
     }
   }
@@ -77,15 +78,15 @@ object PathManagerController extends Controller {
   }
 
   def getPathDetails(path: String) = Action {
-    Logger.debug(s"looking up path $path")
+    logger.debug(s"looking up path $path")
     val pathDetails = PathStore.getPathDetails(path)
     val pathsByType = pathDetails.groupBy(_.`type`)
     PathLookups.increment
     if(pathsByType.isEmpty) {
-      Logger.debug(s"path $path not registered")
+      logger.debug(s"path $path not registered")
       NotFound
     } else {
-      Logger.debug(s"path $path found")
+      logger.debug(s"path $path found")
       argoOk(Json.toJson(pathsByType))
     }
   }
