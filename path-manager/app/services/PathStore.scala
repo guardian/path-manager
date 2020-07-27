@@ -1,6 +1,6 @@
 package services
 
-import com.amazonaws.services.dynamodbv2.document.{KeyAttribute, RangeKeyCondition}
+import com.amazonaws.services.dynamodbv2.document.{Index, KeyAttribute, RangeKeyCondition}
 import model.PathRecord
 import play.api.Logger
 
@@ -60,7 +60,10 @@ object PathStore {
       Left(s"invalid path [${proposedPathRecord.path}]")
     } else {
       val existingPath = Option(Dynamo.pathsTable.getItem("path", proposedPathRecord.path)).map(PathRecord(_))
-      val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
+      val index: Index = Dynamo.pathsTable.getIndex("id-index")
+
+      //noinspection Duplicates
+      val canonicalPathsForId = index.query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", "canonical"))
       val existingCanonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
       existingPath match {
@@ -101,7 +104,7 @@ object PathStore {
       Left(s"invalid path [$newPath]")
     } else {
       val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
-      val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), new RangeKeyCondition("type").eq("canonical"))
+      val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", "canonical"))
       val canonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
       if(newPathRecord.exists(_.identifier != id)) {
@@ -161,7 +164,7 @@ object PathStore {
         Logger.warn(s"update to path [${record.path}] for id [${record.identifier}] has not propagated to secondary index after 20 checks")
         false
       } else {
-        val pathRecordsFromIndex = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", record.identifier), new RangeKeyCondition("type").eq(record.`type`))
+        val pathRecordsFromIndex = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", record.identifier), RangeKeyMatches.rangeKeyMatches("type", record.`type`))
 
         val pathRecordFromIndex = pathRecordsFromIndex.map {
           PathRecord(_)
