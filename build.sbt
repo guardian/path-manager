@@ -8,8 +8,12 @@ resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/release
 
 version := "1.0"
 
+val awsVersion = "1.11.828"
+
 lazy val dependencies = Seq(
-  "com.amazonaws" % "aws-java-sdk" % "1.11.828",
+  "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
+  "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
+  "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
   "org.apache.commons" % "commons-lang3" % "3.11",
   "net.logstash.logback" % "logstash-logback-encoder" % "6.0",
   "com.gu" % "kinesis-logback-appender" % "1.4.4",
