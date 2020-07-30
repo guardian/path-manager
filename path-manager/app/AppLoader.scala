@@ -1,13 +1,13 @@
-import controllers._
-import play.api._
 import play.api.ApplicationLoader.Context
-import play.api.routing.Router
-import play.filters.HttpFiltersComponents
-import router.Routes
-import services.{KinesisLogging, Metrics}
+import play.api._
+import services.KinesisLogging
 
 class AppLoader extends ApplicationLoader {
   def load(context: Context) = {
+
+    LoggerConfigurator(context.environment.classLoader).foreach {
+      _.configure(context.environment, context.initialConfiguration, Map.empty)
+    }
 
     new KinesisLogging(context.initialConfiguration)
 
@@ -16,14 +16,3 @@ class AppLoader extends ApplicationLoader {
   }
 }
 
-class AppComponents(context: Context) extends BuiltInComponentsFromContext(context) with HttpFiltersComponents {
-
-  lazy val metrics = new Metrics(actorSystem)
-
-  lazy val router: Router = new Routes(
-    httpErrorHandler,
-    new PathManagerController(controllerComponents, metrics),
-    new ManagementController(controllerComponents)
-  )
-
-}
