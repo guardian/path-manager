@@ -17,7 +17,10 @@ lazy val dependencies = Seq(
   "org.apache.commons" % "commons-lang3" % "3.11",
   "net.logstash.logback" % "logstash-logback-encoder" % "6.0",
   "com.gu" % "kinesis-logback-appender" % "1.4.4",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test"
+
+  "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test",
+  "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
+  "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test"
 )
 
 lazy val pathManager = project.in(file("path-manager"))
