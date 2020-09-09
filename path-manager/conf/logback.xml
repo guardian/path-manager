@@ -21,10 +21,12 @@
         </encoder>
     </appender>
 
-    <logger name="play" level="INFO" />
-    <logger name="application" level="DEBUG" />
+    <logger name="controllers" level="DEBUG" />
+    <logger name="model" level="DEBUG" />
+    <logger name="services" level="DEBUG" />
+    <logger name="controllers" level="DEBUG" />
 
-    <root level="WARN">
+    <root level="INFO">
         <appender-ref ref="LOGFILE"/>
         <!-- uncomment to console log locally -->
         <!--<appender-ref ref="STDOUT"/>-->
