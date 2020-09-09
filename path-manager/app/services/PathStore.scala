@@ -1,6 +1,6 @@
 package services
 
-import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, Index, KeyAttribute, RangeKeyCondition}
+import com.amazonaws.services.dynamodbv2.document.{Index, KeyAttribute, RangeKeyCondition}
 import model.PathRecord
 import play.api.Logging
 
@@ -15,7 +15,6 @@ object PathValidator extends Logging {
     if (!matches) logger.warn(s"path fails validation [$path]")
     matches
   }
-  def isInvalid(path: String):Boolean = !isValid(path)
 }
 
 object PathStore extends Logging {
@@ -24,7 +23,7 @@ object PathStore extends Logging {
 
     logger.debug(s"Registering new path [$path]")
 
-    if (PathValidator.isInvalid(path)) {
+    if (!PathValidator.isValid(path)) {
       Left(s"invalid path [$path]")
     } else {
       val existingPath = Option(Dynamo.pathsTable.getItem("path", path)).map(PathRecord(_))
@@ -51,13 +50,13 @@ object PathStore extends Logging {
     }
   }
 
-  def registerCanonical(proposedPathRecord: PathRecord) = {
+  def register(proposedPathRecord: PathRecord) = {
 
     val id = proposedPathRecord.identifier
 
     logger.debug(s"Registering path [${proposedPathRecord.path }] for [$id]")
 
-    if (PathValidator.isInvalid(proposedPathRecord.path)) {
+    if (!PathValidator.isValid(proposedPathRecord.path)) {
       Left(s"invalid path [${proposedPathRecord.path}]")
     } else {
       val existingPath = Option(Dynamo.pathsTable.getItem("path", proposedPathRecord.path)).map(PathRecord(_))
@@ -97,76 +96,11 @@ object PathStore extends Logging {
     }
   }
 
-  def registerAlias(proposedAliasPathRecord: PathRecord) = {
-
-    val id = proposedAliasPathRecord.identifier
-
-    logger.debug(s"Registering path [${proposedAliasPathRecord.path }] for [$id]")
-
-    if (PathValidator.isInvalid(proposedAliasPathRecord.path)) {
-      Left(s"invalid path [${proposedAliasPathRecord.path}]")
-    } else {
-      val existingPath = Option(Dynamo.pathsTable.getItem("path", proposedAliasPathRecord.path)).map(PathRecord(_))
-
-      existingPath match {
-        case Some(pr) if (pr.identifier != id) => {
-          logger.warn(s"Failed to register existing path [${proposedAliasPathRecord.path}], already claimed by id [${pr.identifier}], submitting id [$id]")
-          Left("path already in use")
-        }
-        case _ => {
-          putPathItemAndAwaitIndexUpdate(proposedAliasPathRecord)
-
-          logger.debug(s"Registered new alias path [${proposedAliasPathRecord.path}] for id [$id] successfully")
-          Right(List(proposedAliasPathRecord).groupBy(_.`type`))
-        }
-      }
-    }
-  }
-
-  def updateCanonicalWithAlias(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
-    //This takes the canonical path and makes it an alias. And then adds a new canonical path for newPath.
-    
-    logger.debug(s"Updating canonical path [$newPath}] for [$id] and creating alias to old path.")
-
-    if (PathValidator.isInvalid(newPath)) {
-      Left(s"invalid path [$newPath]")
-    } else {
-      val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
-      val pathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id)).asScala
-      val canonicalPathForId = pathsForId.map{ PathRecord(_) }.find(_.`type`=="canonical")
-
-      if(newPathRecord.exists(_.identifier != id)) {
-        logger.warn(s"Failed to update path [$newPath], already claimed by id [${newPathRecord.map{_.identifier}.get}], submitting id [$id]")
-        Left("path already in use")
-      } else {
-        canonicalPathForId.map { existingRecord: PathRecord =>
-
-          val existingPath = existingRecord.path
-          val updatedRecord = if (existingPath != newPath) {
-            val newRecord = existingRecord.copy(path = newPath)
-            val aliasRecord = existingRecord.copy(`type` = "alias")
-            logger.debug(s"Aliasing old path for item [$id]. old path[$existingPath] new path [$newPath]")
-            Dynamo.pathsTable.updateItem("path", existingPath, new AttributeUpdate("type").put("alias"))
-            putPathItemAndAwaitIndexUpdate(newRecord)
-            newRecord
-          } else {
-            existingRecord
-          }
-          logger.debug(s"updated canonical path [$newPath}] and added alias to [$existingPath] id [$id] successfully")
-          List(updatedRecord).groupBy(_.`type`)
-        }.toRight{
-          logger.warn(s"Failed to update path [$newPath], no existing path found for id [$id]")
-          s"unable to find canonical record for $id"
-        }
-      }
-    }
-  }
-
-  def updateCanonical(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
+  def updateCanonical(newPath: String, id: Long) = {
 
     logger.debug(s"Updating canonical path [$newPath}] for [$id]")
 
-    if (PathValidator.isInvalid(newPath)) {
+    if (!PathValidator.isValid(newPath)) {
       Left(s"invalid path [$newPath]")
     } else {
       val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
