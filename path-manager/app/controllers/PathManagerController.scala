@@ -29,17 +29,15 @@ class PathManagerController(override val controllerComponents: ControllerCompone
   }
 
   def registerExistingPath(id: Long) = Action { request =>
-    request.body.asJson.map(_.as[PathRecord]).map { submission =>
-      if (id != submission.identifier) {
+    request.body.asJson.map(_.as[PathRecord]) match {
+      case (Some(path)) if path.identifier != id => {
         PathOperationErrors.increment
         logger.warn("registerExistingPath failed, identifier in url and body do not match")
         BadRequest("identifier in url and body do not match")
-      } else if (submission.`type` != "canonical") {
-        PathOperationErrors.increment
-        logger.warn("registerExistingPath failed, only canonical paths can be updated at present")
-        BadRequest("only canonical paths can be updated at present")
-      } else {
-        PathStore.register(submission) match {
+      }
+
+      case Some(path) if path.`type` == "alias" => {
+        PathStore.registerAlias(path) match {
           case Left(error) => BadRequest(error)
           case Right(records) => {
             PathMigrationRegistrations.increment
@@ -47,19 +45,37 @@ class PathManagerController(override val controllerComponents: ControllerCompone
           }
         }
       }
-    } getOrElse{
-      PathOperationErrors.increment
-      logger.warn("registerExistingPath failed, unable to parse PathRecord from request body")
-      BadRequest("unable to parse PathRecord from request body")
+      case Some(path) if path.`type` == "canonical"  => {
+        PathStore.registerCanonical(path) match {
+          case Left(error) => BadRequest(error)
+          case Right(records) => {
+            PathMigrationRegistrations.increment
+            argoOk(Json.toJson(records))
+          }
+        }
+      }
+      case Some(_)  => {
+        PathOperationErrors.increment
+        logger.warn("registerExistingPath failed, only canonical and alias paths can be updated at present")
+        BadRequest("only canonical paths can be updated at present")
+      }
+      case None => {
+        PathOperationErrors.increment
+        logger.warn("registerExistingPath failed, unable to parse PathRecord from request body")
+        BadRequest("unable to parse PathRecord from request body")
+      }
+
     }
+
   }
 
-  def updateCanonicalPath(id: Long) = Action { request =>
-
+  def updateCanonicalPath(id: Long, shouldFormAlias: Option[Boolean]) = Action { request =>
     val submission = request.body.asFormUrlEncoded.get
     val newPath = submission("path").head
 
-    PathStore.updateCanonical(newPath, id) match {
+    val update = if (shouldFormAlias.contains(true)) {PathStore.updateCanonicalWithAlias _} else {PathStore.updateCanonical _}
+
+    update(newPath,id) match {
       case Left(error) => {
         PathOperationErrors.increment
         BadRequest(error)
