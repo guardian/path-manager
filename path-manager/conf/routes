@@ -5,7 +5,7 @@ GET     /paths                              controllers.PathManagerController.ge
 
 POST    /paths                              controllers.PathManagerController.registerNewPath
 PUT     /paths/:id                          controllers.PathManagerController.registerExistingPath(id: Long)
-POST    /paths/:id                          controllers.PathManagerController.updateCanonicalPath(id: Long, shouldFormAlias: Boolean)
+POST    /paths/:id                          controllers.PathManagerController.updateCanonicalPath(id: Long, shouldFormAlias: Option[Boolean])
 DELETE  /paths/:id                          controllers.PathManagerController.deleteRecord(id: Long)
 
 GET     /showCurrentSequence                controllers.PathManagerController.showCurrentSequence

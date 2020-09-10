@@ -69,11 +69,11 @@ class PathManagerController(override val controllerComponents: ControllerCompone
 
   }
 
-  def updateCanonicalPath(id: Long, shouldFormAlias: Boolean) = Action { request =>
+  def updateCanonicalPath(id: Long, shouldFormAlias: Option[Boolean]) = Action { request =>
     val submission = request.body.asFormUrlEncoded.get
     val newPath = submission("path").head
 
-    val update = if (shouldFormAlias) {PathStore.updateCanonicalWithAlias _} else {PathStore.updateCanonical _}
+    val update = if (shouldFormAlias.contains(true)) {PathStore.updateCanonicalWithAlias _} else {PathStore.updateCanonical _}
 
     update(newPath,id) match {
       case Left(error) => {
