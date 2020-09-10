@@ -186,19 +186,17 @@ The path manager does not currently support:
 
 Run `setup.sh` to install dependencies, this will also setup dev-nginx mappings.
 
-Run `start.sh` to run the docker container for local DynamoDB and start the project in `sbt`.
+To launch `path-manager` locally, either...
+- `start.sh` to run the docker container for local DynamoDB and start the project in `sbt`
+- OR, within `sbt` you can simply run `start`  (which starts the docker container for local DynamoDB and calls `run` on the `pathManager` sub-project, which starts the Play app). 
+...the path manager should then be accessible on: [https://pathmanager.local.dev-gutools.co.uk/](pathmanager.local.dev-gutools.co.uk/).
+
+Note, the app is configured to run on port 10000.
 
 The local dynamo instance can be deleted with `docker-compose down -v`.
 
 You can access [https://pathmanager-db.local.dev-gutools.co.uk/shell/](pathmanager-db.local.dev-gutools.co.uk/shell/) to query tables etc.
 
-The path manager itself is a play app so can be started by the ```run``` command in the `pathManager` sub project in ```sbt```, the app is configured to run
-on port 10000.
-    
-The path manager should now be accessible on:
-
-   [https://pathmanager.local.dev-gutools.co.uk/](pathmanager.local.dev-gutools.co.uk/)
-   
 
 ## Running a migration
 

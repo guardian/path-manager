@@ -23,6 +23,13 @@ lazy val dependencies = Seq(
   "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test"
 )
 
+enablePlugins(DockerCompose)
+
+addCommandAlias("start", "" +
+  "; dockerCompose up -d" +
+  "; compile" +
+  "; pathManager/run")
+
 lazy val pathManager = project.in(file("path-manager"))
   .enablePlugins(PlayScala, RiffRaffArtifact, JDebPackaging, SystemdPlugin)
   .settings(Defaults.coreDefaultSettings: _*)
