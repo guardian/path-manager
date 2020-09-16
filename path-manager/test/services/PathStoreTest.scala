@@ -109,7 +109,19 @@ class PathStoreTest extends PlaySpec with DockerDynamoTestBase with BeforeAndAft
 
         PathStore.updateCanonicalWithAlias(newPath, id) shouldBe Symbol("right")
 
-        PathStore.getPathDetails(firstPath) shouldBe Some(PathRecord(firstPath, id, ALIAS, system))
+        PathStore.getPathDetails(firstPath).fold(
+
+          fail("first path couldn't be found after re-looking it up")
+
+        ) { pathRecord =>
+
+          pathRecord.path shouldBe firstPath
+          pathRecord.identifier shouldBe id
+          pathRecord.`type` shouldBe ALIAS
+          pathRecord.system shouldBe system
+          withClue("alias records should have a lastModified"){ pathRecord.lastModified.isDefined shouldBe true }
+
+        }
 
         PathStore.getPathDetails(newPath) shouldBe Some(PathRecord(newPath, id, CANONICAL, system))
         

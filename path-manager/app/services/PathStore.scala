@@ -1,6 +1,8 @@
 package services
 
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
 import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, Index, KeyAttribute, RangeKeyCondition}
+import com.amazonaws.services.dynamodbv2.model.ReturnValue
 import model.PathRecord
 import play.api.Logging
 
@@ -20,6 +22,9 @@ object PathValidator extends Logging {
 
 object PathStore extends Logging {
 
+  private val CANONICAL_PATH_TYPE = "canonical"
+  private val ALIAS_PATH_TYPE = "alias"
+
   def registerNew(path: String, system: String) = {
 
     logger.debug(s"Registering new path [$path]")
@@ -37,7 +42,7 @@ object PathStore extends Logging {
         case None => {
           val id = IdentifierSequence.getNextId
           logger.debug(s"generated id [$id] path [$path]")
-          val pathRecord = PathRecord(path, id, "canonical", system)
+          val pathRecord = PathRecord(path, id, CANONICAL_PATH_TYPE, system)
           val shortUrlPathRecord = PathRecord(ShortUrlEncoder.generateShortUrlPath(id), id, "short", system)
 
           putPathItemAndAwaitIndexUpdate(pathRecord)
@@ -64,7 +69,7 @@ object PathStore extends Logging {
       val index: Index = Dynamo.pathsTable.getIndex("id-index")
 
       //noinspection Duplicates
-      val canonicalPathsForId = index.query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", "canonical")).asScala
+      val canonicalPathsForId = index.query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", CANONICAL_PATH_TYPE)).asScala
       val existingCanonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
       existingPath match {
@@ -116,7 +121,7 @@ object PathStore extends Logging {
         case _ => {
           putPathItemAndAwaitIndexUpdate(proposedAliasPathRecord)
 
-          logger.debug(s"Registered new alias path [${proposedAliasPathRecord.path}] for id [$id] successfully")
+          logger.debug(s"Registered new $ALIAS_PATH_TYPE path [${proposedAliasPathRecord.path}] for id [$id] successfully")
           Right(List(proposedAliasPathRecord).groupBy(_.`type`))
         }
       }
@@ -126,14 +131,14 @@ object PathStore extends Logging {
   def updateCanonicalWithAlias(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
     //This takes the canonical path and makes it an alias. And then adds a new canonical path for newPath.
     
-    logger.debug(s"Updating canonical path [$newPath}] for [$id] and creating alias to old path.")
+    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath}] for [$id] and creating $ALIAS_PATH_TYPE to old path.")
 
     if (PathValidator.isInvalid(newPath)) {
       Left(s"invalid path [$newPath]")
     } else {
       val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
-      val pathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id)).asScala
-      val canonicalPathForId = pathsForId.map{ PathRecord(_) }.find(_.`type`=="canonical")
+      val pathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id)).asScala.map{ PathRecord(_) }
+      val canonicalPathForId = pathsForId.find(_.`type`==CANONICAL_PATH_TYPE)
 
       if(newPathRecord.exists(_.identifier != id)) {
         logger.warn(s"Failed to update path [$newPath], already claimed by id [${newPathRecord.map{_.identifier}.get}], submitting id [$id]")
@@ -142,21 +147,33 @@ object PathStore extends Logging {
         canonicalPathForId.map { existingRecord: PathRecord =>
 
           val existingPath = existingRecord.path
-          val updatedRecord = if (existingPath != newPath) {
-            val newRecord = existingRecord.copy(path = newPath)
-            val aliasRecord = existingRecord.copy(`type` = "alias")
+          val existingAliases = pathsForId.filter(_.`type` == ALIAS_PATH_TYPE)
+
+          val updatedRecords = if (existingPath != newPath) {
+
+            val newCanonicalRecord = existingRecord.copy(path = newPath, lastModified = None)
+
             logger.debug(s"Aliasing old path for item [$id]. old path[$existingPath] new path [$newPath]")
-            Dynamo.pathsTable.updateItem("path", existingPath, new AttributeUpdate("type").put("alias"))
-            putPathItemAndAwaitIndexUpdate(newRecord)
-            newRecord
+            val resultingAliasRecord = PathRecord(
+              Dynamo.pathsTable.updateItem(new UpdateItemSpec()
+                .withPrimaryKey("path", existingPath)
+                .withAttributeUpdate(
+                  new AttributeUpdate("type").put(ALIAS_PATH_TYPE),
+                  new AttributeUpdate("lastModified").put(System.currentTimeMillis) // so we can keep the aliases order
+                )
+                .withReturnValues(ReturnValue.ALL_NEW) // this means we can call getItem below
+              ).getItem
+            )
+            putPathItemAndAwaitIndexUpdate(newCanonicalRecord) //TODO this and the update above should be a transaction (in case the latter fails)
+            List(newCanonicalRecord, resultingAliasRecord)
           } else {
-            existingRecord
+            List(existingRecord)
           }
-          logger.debug(s"updated canonical path [$newPath}] and added alias to [$existingPath] id [$id] successfully")
-          List(updatedRecord).groupBy(_.`type`)
+          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath}] and added $ALIAS_PATH_TYPE to [$existingPath] id [$id] successfully")
+          (updatedRecords ++ existingAliases).groupBy(_.`type`)
         }.toRight{
           logger.warn(s"Failed to update path [$newPath], no existing path found for id [$id]")
-          s"unable to find canonical record for $id"
+          s"unable to find $CANONICAL_PATH_TYPE record for $id"
         }
       }
     }
@@ -164,13 +181,13 @@ object PathStore extends Logging {
 
   def updateCanonical(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
 
-    logger.debug(s"Updating canonical path [$newPath}] for [$id]")
+    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath}] for [$id]")
 
     if (PathValidator.isInvalid(newPath)) {
       Left(s"invalid path [$newPath]")
     } else {
       val newPathRecord = Option(Dynamo.pathsTable.getItem("path", newPath)).map(PathRecord(_))
-      val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", "canonical")).asScala
+      val canonicalPathsForId = Dynamo.pathsTable.getIndex("id-index").query(new KeyAttribute("identifier", id), RangeKeyMatches.rangeKeyMatches("type", CANONICAL_PATH_TYPE)).asScala
       val canonicalPathForId = canonicalPathsForId.map{ PathRecord(_) }.headOption
 
       if(newPathRecord.exists(_.identifier != id)) {
@@ -189,11 +206,11 @@ object PathStore extends Logging {
             } else {
               existingRecord
             }
-          logger.debug(s"updated canonical path [$newPath}] for id [$id] successfully")
+          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath}] for id [$id] successfully")
           List(updatedRecord).groupBy(_.`type`)
         }.toRight{
           logger.warn(s"Failed to update path [$newPath], no existing path found for id [$id]")
-          s"unable to find canonical record for $id"
+          s"unable to find $CANONICAL_PATH_TYPE record for $id"
         }
       }
     }

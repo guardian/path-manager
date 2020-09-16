@@ -10,7 +10,8 @@ object PathRecord {
     (JsPath \ "path").format[String] and
       (JsPath \ "identifier").format[Long] and
       (JsPath \ "type").format[String] and
-      (JsPath \ "system").format[String]
+      (JsPath \ "system").format[String] and
+      (JsPath \ "lastModified").formatNullable[Long]
     )(PathRecord.apply, unlift(PathRecord.unapply))
 
 
@@ -18,15 +19,25 @@ object PathRecord {
     path = item.getString("path"),
     identifier = item.getLong("identifier"),
     `type` = item.getString("type"),
-    system = item.getString("system")
+    system = item.getString("system"),
+    lastModified = if(item.hasAttribute("lastModified")) Some(item.getLong("lastModified")) else None
   )
 }
 
-case class PathRecord(path: String, identifier: Long, `type`: String, system: String) {
+case class PathRecord(path: String, identifier: Long, `type`: String, system: String, lastModified: Option[Long] = None) {
 
-  def asDynamoItem = new Item()
-    .withString("path", path)
-    .withLong("identifier", identifier)
-    .withString("type", `type`)
-    .withString("system", system)
+  def asDynamoItem = {
+    val item = new Item()
+      .withString("path", path)
+      .withLong("identifier", identifier)
+      .withString("type", `type`)
+      .withString("system", system)
+
+    lastModified.fold(
+      item
+    )(
+      item.withLong("lastModified", _)
+    )
+  }
+
 }
