@@ -14,7 +14,7 @@ object Dynamo extends AwsInstanceTags with Logging {
   lazy val stage: String = readTag("Stage").getOrElse("DEV")
 
   lazy val dynamoDb = new DynamoDB( instanceId match {
-    case Some(_) if stage != "DEVINFRA" =>
+    case Some(_) if readTag("App").contains("path-manager" /* therefore excludes TeamCity*/) =>
       AmazonDynamoDBClientBuilder.standard().withRegion(AWS.region).build()
 
     case _ => {

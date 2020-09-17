@@ -80,9 +80,9 @@ class PathManagerController(override val controllerComponents: ControllerCompone
         PathOperationErrors.increment
         BadRequest(error)
       }
-      case Right(record) => {
+      case Right(result) => {
         PathUpdates.increment
-        Ok(Json.toJson(record))
+        Ok(Json.toJson(result))
       }
     }
   }
