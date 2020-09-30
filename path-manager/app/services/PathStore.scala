@@ -1,8 +1,9 @@
 package services
 
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap
 import com.amazonaws.services.dynamodbv2.document.{AttributeUpdate, Index, KeyAttribute, RangeKeyCondition}
-import com.amazonaws.services.dynamodbv2.model.ReturnValue
+import com.amazonaws.services.dynamodbv2.model.{ConditionalCheckFailedException, ReturnValue}
 import model.PathRecord
 import play.api.Logging
 
@@ -178,6 +179,34 @@ object PathStore extends Logging {
       }
     }
   }
+
+  def setAliasPathIsRemovedFlag(path: String, isRemoved: Boolean): Option[Iterable[PathRecord]] = {
+    try {
+      val updatedRecord = PathRecord(
+        Dynamo.pathsTable.updateItem(new UpdateItemSpec()
+          .withPrimaryKey("path", path)
+          .withConditionExpression(s"#type = :pathType")
+          .withUpdateExpression("SET isRemoved = :isRemoved")
+          .withNameMap(Map("#type" -> "type").asJava)
+          .withValueMap(new ValueMap()
+            .withString(":pathType", ALIAS_PATH_TYPE)
+            .withBoolean(":isRemoved", isRemoved)
+          )
+          .withReturnValues(ReturnValue.ALL_NEW) // this means we can call getItem below
+        ).getItem
+      )
+
+      Some(
+        Dynamo.pathsTable.getIndex("id-index")
+        .query(new KeyAttribute("identifier", updatedRecord.identifier)).asScala.map{ PathRecord(_) }
+        .filter(_.`type` == ALIAS_PATH_TYPE)
+      )
+    } catch {
+      case _: ConditionalCheckFailedException => None
+    }
+
+  }
+
 
   def updateCanonical(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
 

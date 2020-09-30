@@ -1,8 +1,10 @@
 package controllers
 
+import com.amazonaws.services.dynamodbv2.model.ConditionalCheckFailedException
 import model.PathRecord
 import play.api.Logging
 import play.api.libs.json.{JsValue, Json}
+import play.api.mvc.Results.NotFound
 import play.api.mvc.{BaseController, ControllerComponents}
 import services.{IdentifierSequence, Metrics, PathStore}
 
@@ -85,6 +87,20 @@ class PathManagerController(override val controllerComponents: ControllerCompone
         Ok(Json.toJson(result))
       }
     }
+  }
+
+  def setAliasPathIsRemovedFlag(path: String) = Action { request =>
+    val isRemoved = request.body.asJson.get.as[Boolean]
+
+    PathStore.setAliasPathIsRemovedFlag(path, isRemoved).fold {
+      PathOperationErrors.increment
+      NotFound("no alias path matching the provided path")
+    }(
+      aliasPaths => Ok(
+        Json.toJson(aliasPaths)
+      )
+    )
+
   }
 
   def deleteRecord(id: Long) = Action {
