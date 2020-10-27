@@ -89,8 +89,9 @@ class PathManagerController(override val controllerComponents: ControllerCompone
     }
   }
 
-  def setAliasPathIsRemovedFlag(path: String) = Action { request =>
-    val isRemoved = request.body.asJson.get.as[Boolean]
+  def markAliasPathAsRemoved = setAliasPathIsRemovedFlag(true) _
+  def restoreRemovedAliasPath = setAliasPathIsRemovedFlag(false) _
+  private def setAliasPathIsRemovedFlag(isRemoved: Boolean)(path: String)  = Action { request =>
 
     PathStore.setAliasPathIsRemovedFlag(path, isRemoved).fold {
       PathOperationErrors.increment

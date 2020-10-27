@@ -3,8 +3,10 @@
 GET     /paths/:id                          controllers.PathManagerController.getPathsById(id: Long)
 GET     /paths                              controllers.PathManagerController.getPathDetails(path: String)
 
+POST    /aliasPath                          controllers.PathManagerController.restoreRemovedAliasPath(path: String)
+DELETE  /aliasPath                          controllers.PathManagerController.markAliasPathAsRemoved(path: String)
+
 POST    /paths                              controllers.PathManagerController.registerNewPath
-POST    /paths/aliasPathIsRemoved           controllers.PathManagerController.setAliasPathIsRemovedFlag(path: String)
 PUT     /paths/:id                          controllers.PathManagerController.registerExistingPath(id: Long)
 POST    /paths/:id                          controllers.PathManagerController.updateCanonicalPath(id: Long, shouldFormAlias: Option[Boolean])
 DELETE  /paths/:id                          controllers.PathManagerController.deleteRecord(id: Long)
