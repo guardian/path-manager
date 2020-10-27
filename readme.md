@@ -200,7 +200,7 @@ You can access [https://pathmanager-db.local.dev-gutools.co.uk/shell/](pathmanag
 
 ## Running a migration
 
-Please see [https://github.com/guardian/path-manager/blob/master/migrator/readme.md](migrator/readme.md).
+Please see [/migrator/readme.md](migrator/readme.md).
 
 ## Refreshing from PROD
 
