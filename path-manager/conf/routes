@@ -3,7 +3,6 @@
 GET     /paths/:id                          controllers.PathManagerController.getPathsById(id: Long)
 GET     /paths                              controllers.PathManagerController.getPathDetails(path: String)
 
-POST    /aliasPath                          controllers.PathManagerController.restoreRemovedAliasPath(path: String)
 DELETE  /aliasPath                          controllers.PathManagerController.markAliasPathAsRemoved(path: String)
 
 POST    /paths                              controllers.PathManagerController.registerNewPath
