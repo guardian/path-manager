@@ -89,11 +89,9 @@ class PathManagerController(override val controllerComponents: ControllerCompone
     }
   }
 
-  def markAliasPathAsRemoved = setAliasPathIsRemovedFlag(true) _
-  def restoreRemovedAliasPath = setAliasPathIsRemovedFlag(false) _
-  private def setAliasPathIsRemovedFlag(isRemoved: Boolean)(path: String)  = Action { request =>
+  def markAliasPathAsRemoved(path: String)  = Action {
 
-    PathStore.setAliasPathIsRemovedFlag(path, isRemoved).fold {
+    PathStore.setAliasPathIsRemovedFlag(path, isRemoved = true).fold {
       PathOperationErrors.increment
       NotFound("no alias path matching the provided path")
     }(
