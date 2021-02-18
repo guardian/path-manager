@@ -76,11 +76,11 @@ class PathStoreTest extends PlaySpec with DockerDynamoTestBase with BeforeAndAft
       )(id => {
 
         PathStore.registerAlias(PathRecord(newPath, id, ALIAS, system))
-        
+
         val paths = PathStore.getPathsById(id)
 
         paths.get(ALIAS).flatMap(_.headOption) shouldBe Some(PathRecord(newPath, id, ALIAS, system))
-        
+
         paths.get(CANONICAL).flatMap(_.headOption) shouldBe Some(PathRecord(firstPath, id, CANONICAL, system))
 
       })
@@ -119,12 +119,12 @@ class PathStoreTest extends PlaySpec with DockerDynamoTestBase with BeforeAndAft
           pathRecord.identifier shouldBe id
           pathRecord.`type` shouldBe ALIAS
           pathRecord.system shouldBe system
-          withClue("alias records should have a lastModified"){ pathRecord.lastModified.isDefined shouldBe true }
+          withClue("alias records should have a ceasedToBeCanonicalAt"){ pathRecord.ceasedToBeCanonicalAt.isDefined shouldBe true }
 
         }
 
         PathStore.getPathDetails(newPath) shouldBe Some(PathRecord(newPath, id, CANONICAL, system))
-        
+
 
       })
 

@@ -131,7 +131,7 @@ object PathStore extends Logging {
 
   def updateCanonicalWithAlias(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
     //This takes the canonical path and makes it an alias. And then adds a new canonical path for newPath.
-    
+
     logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath}] for [$id] and creating $ALIAS_PATH_TYPE to old path.")
 
     if (PathValidator.isInvalid(newPath)) {
@@ -152,7 +152,7 @@ object PathStore extends Logging {
 
           val updatedRecords = if (existingPath != newPath) {
 
-            val newCanonicalRecord = existingRecord.copy(path = newPath, lastModified = None)
+            val newCanonicalRecord = existingRecord.copy(path = newPath, ceasedToBeCanonicalAt = None)
 
             logger.debug(s"Aliasing old path for item [$id]. old path[$existingPath] new path [$newPath]")
             val resultingAliasRecord = PathRecord(
@@ -160,7 +160,7 @@ object PathStore extends Logging {
                 .withPrimaryKey("path", existingPath)
                 .withAttributeUpdate(
                   new AttributeUpdate("type").put(ALIAS_PATH_TYPE),
-                  new AttributeUpdate("lastModified").put(System.currentTimeMillis) // so we can keep the aliases order
+                  new AttributeUpdate("ceasedToBeCanonicalAt").put(System.currentTimeMillis) // so we can keep the aliases order
                 )
                 .withReturnValues(ReturnValue.ALL_NEW) // this means we can call getItem below
               ).getItem
