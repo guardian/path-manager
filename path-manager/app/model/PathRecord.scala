@@ -11,7 +11,7 @@ object PathRecord {
       (JsPath \ "identifier").format[Long] and
       (JsPath \ "type").format[String] and
       (JsPath \ "system").format[String] and
-      (JsPath \ "lastModified").formatNullable[Long] and
+      (JsPath \ "ceasedToBeCanonicalAt").formatNullable[Long] and
       (JsPath \ "isRemoved").formatNullable[Boolean]
     )(PathRecord.apply, unlift(PathRecord.unapply))
 
@@ -21,7 +21,7 @@ object PathRecord {
     identifier = item.getLong("identifier"),
     `type` = item.getString("type"),
     system = item.getString("system"),
-    lastModified = if(item.hasAttribute("lastModified")) Some(item.getLong("lastModified")) else None,
+    ceasedToBeCanonicalAt = if(item.hasAttribute("ceasedToBeCanonicalAt")) Some(item.getLong("ceasedToBeCanonicalAt")) else None,
     isRemoved = if(item.hasAttribute("isRemoved")) Some(item.getBoolean("isRemoved")) else None
   )
 }
@@ -31,7 +31,7 @@ case class PathRecord(
   identifier: Long,
   `type`: String,
   system: String,
-  lastModified: Option[Long] = None,
+  ceasedToBeCanonicalAt: Option[Long] = None,
   isRemoved: Option[Boolean] = None
 ) {
 
@@ -42,10 +42,10 @@ case class PathRecord(
       .withString("type", `type`)
       .withString("system", system)
 
-    val intermediateItem = lastModified.fold(
+    val intermediateItem = ceasedToBeCanonicalAt.fold(
       baseItem
     )(
-      baseItem.withLong("lastModified", _)
+      baseItem.withLong("ceasedToBeCanonicalAt", _)
     )
 
     isRemoved.fold(
