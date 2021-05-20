@@ -50,7 +50,7 @@ object PathStore extends Logging {
           logger.debug(s"Adding new short url record for [$id]. short path[${shortUrlPathRecord.path }]")
           Dynamo.pathsTable.putItem(shortUrlPathRecord.asDynamoItem)
 
-          logger.debug(s"Registered path [$path}] for id [$id] successfully")
+          logger.debug(s"Registered path [$path] for id [$id] successfully")
           Right(List(pathRecord, shortUrlPathRecord).groupBy(_.`type`))
         }
       }
@@ -132,7 +132,7 @@ object PathStore extends Logging {
   def updateCanonicalWithAlias(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
     //This takes the canonical path and makes it an alias. And then adds a new canonical path for newPath.
 
-    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath}] for [$id] and creating $ALIAS_PATH_TYPE to old path.")
+    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath] for [$id] and creating $ALIAS_PATH_TYPE to old path.")
 
     if (PathValidator.isInvalid(newPath)) {
       Left(s"invalid path [$newPath]")
@@ -170,7 +170,7 @@ object PathStore extends Logging {
           } else {
             List(existingRecord)
           }
-          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath}] and added $ALIAS_PATH_TYPE to [$existingPath] id [$id] successfully")
+          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath] and added $ALIAS_PATH_TYPE to [$existingPath] id [$id] successfully")
           (updatedRecords ++ existingAliases).groupBy(_.`type`)
         }.toRight{
           logger.warn(s"Failed to update path [$newPath], no existing path found for id [$id]")
@@ -210,7 +210,7 @@ object PathStore extends Logging {
 
   def updateCanonical(newPath: String, id: Long): Either[String, Map[String, List[PathRecord]]] = {
 
-    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath}] for [$id]")
+    logger.debug(s"Updating $CANONICAL_PATH_TYPE path [$newPath] for [$id]")
 
     if (PathValidator.isInvalid(newPath)) {
       Left(s"invalid path [$newPath]")
@@ -235,7 +235,7 @@ object PathStore extends Logging {
             } else {
               existingRecord
             }
-          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath}] for id [$id] successfully")
+          logger.debug(s"updated $CANONICAL_PATH_TYPE path [$newPath] for id [$id] successfully")
           List(updatedRecord).groupBy(_.`type`)
         }.toRight{
           logger.warn(s"Failed to update path [$newPath], no existing path found for id [$id]")
