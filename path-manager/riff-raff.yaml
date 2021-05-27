@@ -6,7 +6,7 @@ deployments:
     app: path-manager
     parameters:
       amiTags:
-        Recipe: editorial-tools-xenial-java8
+        Recipe: editorial-tools-bionic-java8
         AmigoStage: PROD
         BuiltBy: amigo
       amiEncrypted: true
