@@ -4,18 +4,18 @@ import play.sbt.PlayImport.PlayKeys._
 
 name := "path-manager"
 
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
+resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
 
 version := "1.0"
 
-val awsVersion = "1.11.828"
+val awsVersion = "1.12.129"
 
 lazy val dependencies = Seq(
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
   "org.apache.commons" % "commons-lang3" % "3.11",
-  "net.logstash.logback" % "logstash-logback-encoder" % "6.0",
+  "net.logstash.logback" % "logstash-logback-encoder" % "6.6",
   "com.gu" % "kinesis-logback-appender" % "1.4.4",
 
   "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test",
@@ -34,7 +34,7 @@ lazy val pathManager = project.in(file("path-manager"))
   .enablePlugins(PlayScala, RiffRaffArtifact, JDebPackaging, SystemdPlugin)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
-    javaOptions in Universal ++= Seq(
+    Universal / javaOptions ++= Seq(
       "-Dpidfile.path=/dev/null",
       "-J-XX:MaxRAMFraction=2",
       "-J-XX:InitialRAMFraction=2",
@@ -48,17 +48,19 @@ lazy val pathManager = project.in(file("path-manager"))
     maintainer := "Editorial Tools Developers <digitalcms.dev@theguardian.com>",
     packageSummary := description.value,
     packageDescription := description.value,
-    scalaVersion := "2.13.3",
-    scalaVersion in ThisBuild := "2.13.3",
+    scalaVersion := "2.13.7",
+    ThisBuild / scalaVersion := "2.13.7",
     scalacOptions ++= Seq("-feature", "-deprecation", "-language:higherKinds", "-Xfatal-warnings"),
-    doc in Compile := (target.value / "none"),
-    fork in Test := false,
+    Compile / doc := (target.value / "none"),
+    Test / fork := false,
     name := "path-manager",
     playDefaultPort := 10000,
     libraryDependencies ++= dependencies,
-    packageName in Universal := normalizedName.value,
-    topLevelDirectory in Universal := Some(normalizedName.value),
-    riffRaffPackageType := (packageBin in Debian).value,
+    //Necessary to override jackson-databind versions due to AWS and Play incompatibility
+    dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.11.4",
+    Universal / packageName := normalizedName.value,
+    Universal/ topLevelDirectory := Some(normalizedName.value),
+    riffRaffPackageType := (Debian / packageBin).value,
     riffRaffPackageName := name.value,
     riffRaffManifestProjectName := s"editorial-tools:${name.value}",
     riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
