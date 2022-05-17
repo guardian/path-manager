@@ -2,7 +2,7 @@
 
     <conversionRule conversionWord="coloredLevel" converterClass="play.api.libs.logback.ColoredLevel" />
 
-    <appender name="LOGFILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/application.log</file>
 
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
@@ -16,9 +16,11 @@
     </appender>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>%coloredLevel %logger{15} - %message%n%xException{5}</pattern>
-        </encoder>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder" />
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="STDOUT" />
     </appender>
 
     <logger name="controllers" level="DEBUG" />
@@ -27,8 +29,7 @@
     <logger name="controllers" level="DEBUG" />
 
     <root level="INFO">
-        <appender-ref ref="LOGFILE"/>
-        <!-- uncomment to console log locally -->
-        <!--<appender-ref ref="STDOUT"/>-->
+        <appender-ref ref="ASYNCSTDOUT"/>
+        <appender-ref ref="FILE" />
     </root>
 </configuration>
