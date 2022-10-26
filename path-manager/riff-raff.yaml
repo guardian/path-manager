@@ -13,6 +13,6 @@ deployments:
   path-manager:
     type: autoscaling
     parameters:
-      bucketSsmLookup: true
+      bucket: composer-dist
     dependencies:
     - ami-update
