@@ -12,7 +12,5 @@ deployments:
       amiEncrypted: true
   path-manager:
     type: autoscaling
-    parameters:
-      bucket: composer-dist
     dependencies:
     - ami-update
