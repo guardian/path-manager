@@ -6,7 +6,7 @@ deployments:
     app: path-manager
     parameters:
       amiTags:
-        Recipe: editorial-tools-bionic-java8-WITH-cdk-base
+        Recipe: editorial-tools-focal-java8-WITH-cdk-base
         AmigoStage: PROD
         BuiltBy: amigo
       amiEncrypted: true
