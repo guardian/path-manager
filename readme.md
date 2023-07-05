@@ -16,7 +16,7 @@ The path manager exposes the following operations:
 ### Register a new path
 
 To register a new path issue a POST request with ```path``` and ```system``` parameters. This operation will create a new path entry for the path
-requested if the the path is not currently in use. An id is also generated for to identify the object that the path links to,
+requested if the path is not currently in use. An id is also generated for to identify the object that the path links to,
 this id should be stored in the calling system for future operations (this is stored as the internalPageCode in composer and CAPI).
 
 If successful this operation will return an argo JSON response with the paths registered, These are indexed by path type.
