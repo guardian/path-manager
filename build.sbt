@@ -31,7 +31,7 @@ addCommandAlias("start", "" +
   "; pathManager/run")
 
 lazy val pathManager = project.in(file("path-manager"))
-  .enablePlugins(PlayScala, RiffRaffArtifact, JDebPackaging, SystemdPlugin)
+  .enablePlugins(PlayScala, JDebPackaging, SystemdPlugin)
   .settings(Defaults.coreDefaultSettings: _*)
   .settings(
     Universal / javaOptions ++= Seq(
@@ -60,9 +60,4 @@ lazy val pathManager = project.in(file("path-manager"))
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.11.4",
     Universal / packageName := normalizedName.value,
     Universal/ topLevelDirectory := Some(normalizedName.value),
-    riffRaffPackageType := (Debian / packageBin).value,
-    riffRaffPackageName := name.value,
-    riffRaffManifestProjectName := s"editorial-tools:${name.value}",
-    riffRaffUploadArtifactBucket := Option("riffraff-artifact"),
-    riffRaffUploadManifestBucket := Option("riffraff-builds")
   )
