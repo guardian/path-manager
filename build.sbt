@@ -45,7 +45,7 @@ lazy val pathManager = project.in(file("path-manager"))
       "-J-XX:+PrintGCDateStamps",
       s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
     ),
-    debianPackageDependencies := Seq("openjdk-8-jre-headless"),
+    debianPackageDependencies := Seq("java11-runtime-headless"),
     maintainer := "Editorial Tools Developers <digitalcms.dev@theguardian.com>",
     packageSummary := description.value,
     packageDescription := description.value,
