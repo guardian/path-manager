@@ -53,8 +53,6 @@ lazy val pathManager = project.in(file("path-manager"))
     name := "path-manager",
     playDefaultPort := 10000,
     libraryDependencies ++= dependencies,
-    //Necessary to override jackson-databind versions due to AWS and Play incompatibility
-    dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.11.4",
     Universal / packageName := normalizedName.value,
     Universal/ topLevelDirectory := Some(normalizedName.value),
   )
