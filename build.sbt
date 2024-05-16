@@ -11,6 +11,7 @@ version := "1.0"
 val awsVersion = "1.12.129"
 
 lazy val dependencies = Seq(
+  "com.github.jnr" % "jnr-unixsocket" % "0.38.22" % "test",
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
