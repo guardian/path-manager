@@ -15,6 +15,7 @@ lazy val dependencies = Seq(
   "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
   "org.apache.commons" % "commons-lang3" % "3.14.0",
   "net.logstash.logback" % "logstash-logback-encoder" % "7.3",
+  "javax.xml.bind" % "jaxb-api" % "2.3.1", // todo: why is this needed?
   "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % "test",
   "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test"
