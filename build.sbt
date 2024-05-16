@@ -6,16 +6,16 @@ resolvers += "Typesafe repository" at "https://repo.typesafe.com/typesafe/releas
 
 version := "1.0"
 
-val awsVersion = "1.12.129"
+val awsVersion = "1.12.583"
 
 lazy val dependencies = Seq(
   "com.github.jnr" % "jnr-unixsocket" % "0.38.22" % "test",
   "com.amazonaws" % "aws-java-sdk-dynamodb" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-cloudwatch" % awsVersion,
   "com.amazonaws" % "aws-java-sdk-ec2" % awsVersion,
-  "org.apache.commons" % "commons-lang3" % "3.11",
-  "net.logstash.logback" % "logstash-logback-encoder" % "6.6",
-  "org.scalatestplus.play" %% "scalatestplus-play" % "5.1.0" % "test",
+  "org.apache.commons" % "commons-lang3" % "3.14.0",
+  "net.logstash.logback" % "logstash-logback-encoder" % "7.3",
+  "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.1" % "test",
   "com.whisk" %% "docker-testkit-scalatest" % "0.9.9" % "test",
   "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test"
 )
