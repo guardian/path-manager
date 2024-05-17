@@ -53,7 +53,6 @@ lazy val pathManager = project.in(file("path-manager"))
       "-J-XX:MaxMetaspaceSize=500m",
       "-J-XX:+UseConcMarkSweepGC",
       "-J-XX:+PrintGCDetails",
-      "-J-XX:+PrintGCDateStamps",
       s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
     ),
     debianPackageDependencies := Seq("java11-runtime-headless"),
