@@ -3,7 +3,7 @@ package services
 import java.util.Date
 import java.util.concurrent.atomic.{AtomicLong, AtomicReference}
 
-import akka.actor.{Actor, ActorSystem, Props}
+import org.apache.pekko.actor.{Actor, ActorSystem, Props}
 import com.amazonaws.services.cloudwatch.model._
 
 import scala.concurrent.ExecutionContext.Implicits.global
