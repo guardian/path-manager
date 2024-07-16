@@ -30,6 +30,9 @@ lazy val dependencies = Seq(
 
   "com.whisk" %% "docker-testkit-impl-spotify" % "0.9.9" % "test" exclude("com.fasterxml.jackson.module", "jackson-module-jaxb-annotations"),
 
+  // this module was removed in Java 11, but is still required by docker-testkit-impl-spotify
+  "com.sun.activation" % "javax.activation" % "1.2.0" % "test",
+
   // docker-testkit-impl-spotif depends on jnr-unixsocket:0.18, which doesn't support M1 silicon
   // see https://github.com/spotify/docker-client/pull/1221 (unmerged at present)
   "com.github.jnr" % "jnr-unixsocket" % "0.38.22" % "test" exclude("com.fasterxml.jackson.module", "jackson-module-jaxb-annotations")
