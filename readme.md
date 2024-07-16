@@ -202,9 +202,11 @@ You can access [https://pathmanager-db.local.dev-gutools.co.uk/shell/](pathmanag
 
 Please see [/migrator/readme.md](migrator/readme.md).
 
-## Populate CODE with PROD data
+## Database backups
 
-Path manager is backed by a DynamoDB database. You can restore a backup to a new database table using AWS Backup. See [here](https://docs.aws.amazon.com/aws-backup/latest/devguide/restoring-dynamodb.html) for instructions on how to do this.
+Path manager stores its data in a DynamoDB database. It is backed up daily using [AWS Backup](https://docs.aws.amazon.com/aws-backup/latest/devguide/whatisbackup.html).
+
+If you need PROD data in CODE, you can restore a backup to a new database table. See [this guide](https://docs.aws.amazon.com/aws-backup/latest/devguide/restoring-dynamodb.html) for instructions on how to do this.
 
 ## Argo JSON 
 
