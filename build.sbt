@@ -1,4 +1,5 @@
 import play.sbt.PlayImport.PlayKeys._
+import scala.sys.process._
 
 name := "path-manager"
 
@@ -51,4 +52,12 @@ lazy val pathManager = project.in(file("path-manager"))
     libraryDependencies ++= dependencies,
     Universal / packageName := normalizedName.value,
     Universal/ topLevelDirectory := Some(normalizedName.value),
+    Test / testOptions += Tests.Setup(_ => {
+      println(s"Starting Docker containers for tests")
+      "docker-compose up -d".!
+    }),
+    Test / testOptions += Tests.Cleanup(_ => {
+      println(s"Stopping Docker containers for tests")
+      "docker-compose rm --stop --force".!
+    }),
   )
