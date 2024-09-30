@@ -54,10 +54,10 @@ lazy val pathManager = project.in(file("path-manager"))
     Universal/ topLevelDirectory := Some(normalizedName.value),
     Test / testOptions += Tests.Setup(_ => {
       println(s"Starting Docker containers for tests")
-      "docker-compose up -d".!
+      "docker compose up -d".!
     }),
     Test / testOptions += Tests.Cleanup(_ => {
       println(s"Stopping Docker containers for tests")
-      "docker-compose rm --stop --force".!
+      "docker compose rm --stop --force".!
     }),
   )
