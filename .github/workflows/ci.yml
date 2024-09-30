@@ -17,6 +17,12 @@ jobs:
       # Required for `actions/checkout`
       contents: read
 
+    services:
+      dynamodb:
+        image: amazon/dynamodb-local
+        ports:
+          - 10005:8000
+
     steps:
       # Seed the build number with last number from TeamCity.
       # This env var is used by the JS, and SBT builds, and guardian/actions-riff-raff.
