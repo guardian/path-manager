@@ -1,6 +1,6 @@
 version: '3'
 services:
-    dyanmo:
+    dynamo:
       container_name: dynamo
       image: amazon/dynamodb-local
       ports: 

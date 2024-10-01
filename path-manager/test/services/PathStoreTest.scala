@@ -5,7 +5,7 @@ import org.scalatest.matchers.should.Matchers._
 import org.scalatestplus.play._
 import org.scalatest.BeforeAndAfterEach
 
-class PathStoreTest extends PlaySpec with DockerDynamoTestBase with BeforeAndAfterEach {
+class PathStoreTest extends PlaySpec with BeforeAndAfterEach {
 
   val CANONICAL = "canonical"
   val ALIAS = "alias"
