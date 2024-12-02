@@ -11,9 +11,9 @@ plain='\x1B[0m' # No Color
 fail() {
     exit_code=$?
     if [[ "${exit_code}" -ne 0 ]]; then
-        echo -e "\n${red}Setup script failed, please fix errors before starting Composer"
+        echo -e "\n${red}Setup script failed, please fix errors before starting Path-Manager"
     else
-        echo -e "\n${green}All done! You can run Composer now."
+        echo -e "\n${green}All done! You can run Path-Manager now."
     fi
 }
 
