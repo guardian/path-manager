@@ -17,6 +17,9 @@ jobs:
       # Required for `actions/checkout`
       contents: read
 
+      # required since guardian/actions-riff-raff@v3
+      pull-requests: write 
+
     steps:
       # Seed the build number with last number from TeamCity.
       # This env var is used by the JS, and SBT builds, and guardian/actions-riff-raff.
@@ -43,6 +46,7 @@ jobs:
       - uses: guardian/actions-riff-raff@v4
         with:
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: editorial-tools:path-manager
           buildNumber: ${{ env.BUILD_NUMBER }}
           configPath: riff-raff.yaml
