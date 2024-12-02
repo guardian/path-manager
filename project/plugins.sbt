@@ -1,4 +1,4 @@
-addSbtPlugin("org.playframework" % "sbt-plugin" % "3.0.2")
+addSbtPlugin("org.playframework" % "sbt-plugin" % "3.0.6")
 
 addSbtPlugin("com.github.ehsanyou" % "sbt-docker-compose" % "2.0.0")
 

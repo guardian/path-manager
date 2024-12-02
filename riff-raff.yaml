@@ -6,7 +6,7 @@ deployments:
     app: path-manager
     parameters:
       amiTags:
-        Recipe: editorial-tools-focal-java11-ARM-WITH-cdk-base
+        Recipe: editorial-tools-focal-java21
         AmigoStage: PROD
         BuiltBy: amigo
       amiEncrypted: true
