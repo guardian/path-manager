@@ -34,7 +34,6 @@ lazy val pathManager = project.in(file("path-manager"))
       "-J-XX:MaxRAMFraction=2",
       "-J-XX:InitialRAMFraction=2",
       "-J-XX:MaxMetaspaceSize=500m",
-      "-J-XX:+UseConcMarkSweepGC",
       "-J-XX:+PrintGCDetails",
       s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
     ),
