@@ -31,8 +31,8 @@ lazy val pathManager = project.in(file("path-manager"))
   .settings(
     Universal / javaOptions ++= Seq(
       "-Dpidfile.path=/dev/null",
-      "-J-XX:MaxRAMFraction=2",
-      "-J-XX:InitialRAMFraction=2",
+      "-J-XX:InitialRAMPercentage=50",
+      "-J-XX:MaxRAMPercentage=50",
       "-J-XX:MaxMetaspaceSize=500m",
       "-J-XX:+PrintGCDetails",
       s"-J-Xloggc:/var/log/${packageName.value}/gc.log"
