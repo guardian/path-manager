@@ -17,6 +17,9 @@ jobs:
       # Required for `actions/checkout`
       contents: read
 
+      # required since guardian/actions-riff-raff@v3
+      pull-requests: write 
+
     steps:
       # Seed the build number with last number from TeamCity.
       # This env var is used by the JS, and SBT builds, and guardian/actions-riff-raff.
@@ -27,11 +30,11 @@ jobs:
           LAST_TEAMCITY_BUILD=184
           echo "BUILD_NUMBER=$(( $GITHUB_RUN_NUMBER + $LAST_TEAMCITY_BUILD ))" >> $GITHUB_ENV
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v3
+      - uses: actions/setup-java@v4
         with:
-          java-version: '11'
+          java-version: '21'
           distribution: 'corretto'
           cache: 'sbt'
 
@@ -39,15 +42,11 @@ jobs:
         run: |
           sbt clean compile test Debian/packageBin
 
-      # Fetch AWS credentials, allowing us to upload to Riff-Raff (well, S3)
-      - uses: aws-actions/configure-aws-credentials@v2
-        with:
-          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
-          aws-region: eu-west-1
-
       # Upload our build artifacts to Riff-Raff (well, S3)
-      - uses: guardian/actions-riff-raff@v2
+      - uses: guardian/actions-riff-raff@v4
         with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: editorial-tools:path-manager
           buildNumber: ${{ env.BUILD_NUMBER }}
           configPath: riff-raff.yaml
