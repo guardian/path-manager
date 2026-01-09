@@ -8,7 +8,7 @@ plain='\x1B[0m' # No Color
 
 
 runDynanmo() {
-  docker-compose up -d
+  docker compose up -d
 }
  
 startSbt() {
