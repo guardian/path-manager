@@ -210,4 +210,4 @@ If you need PROD data in CODE, you can restore a backup to a new database table.
 
 ## Argo JSON 
 
-[https://github.com/argo-rest/spec](Argo JSON) is a subset of JSON developed at the Guardian which delivers a hypermedia response. Most of the clients for this microservice can consume it. It is meant in every location where JSON is used in the documentation. 
+[Argo JSON](https://github.com/argo-rest/spec) is a subset of JSON developed at the Guardian which delivers a hypermedia response. Most of the clients for this microservice can consume it. It is meant in every location where JSON is used in the documentation.
