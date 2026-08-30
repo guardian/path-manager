@@ -18,9 +18,10 @@ object Dynamo extends AwsInstanceTags with Logging {
       AmazonDynamoDBClientBuilder.standard().withRegion(AWS.region).build()
 
     case _ => {
+      val endpoint = sys.env.getOrElse("AWS_ENDPOINT_URL", s"http://localhost:$LOCAL_PORT")
       val client = AmazonDynamoDBClientBuilder.standard()
         .withCredentials(new AWSStaticCredentialsProvider(new BasicAWSCredentials("local", "local")))
-        .withEndpointConfiguration(new EndpointConfiguration(s"http://localhost:$LOCAL_PORT", "local"))
+        .withEndpointConfiguration(new EndpointConfiguration(endpoint, "local"))
         .build()
 
       createSequenceTableIfMissing(client)
