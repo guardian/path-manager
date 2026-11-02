@@ -9,7 +9,8 @@ version := "1.0"
 
 val awsVersion = "1.12.797"
 
-val jacksonVersion  = "2.20.1"
+val jacksonVersion  = "2.21.7"
+val jackson3Version = "3.1.7"
 val jacksons        = Seq(
   "com.fasterxml.jackson.core" % "jackson-core",
   "com.fasterxml.jackson.core" % "jackson-databind",
@@ -34,7 +35,15 @@ lazy val dependencies = Seq(
   "org.scalatestplus.play" %% "scalatestplus-play" % "7.0.2" % "test",
 )
 
-val projectDependencyOverrides = jacksons ++ pekkoSerializationJacksonOverrides
+val jackson3Overrides = Seq(
+  "tools.jackson.core" % "jackson-core",
+  "tools.jackson.core" % "jackson-databind"
+).map(_ % jackson3Version)
+
+// Both Jackson BOMs use the shared 2.x annotations artifact.
+val projectDependencyOverrides = jacksons ++ pekkoSerializationJacksonOverrides ++ jackson3Overrides ++ Seq(
+  "com.fasterxml.jackson.core" % "jackson-annotations" % "2.21"
+)
 
 enablePlugins(DockerCompose)
 
