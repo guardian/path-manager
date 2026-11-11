@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/checkout@v4
 
-      - uses: guardian/setup-scala@v1
+      - uses: guardian/setup-scala@v2
 
       - name: Scala Build
         run: |
