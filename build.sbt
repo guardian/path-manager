@@ -82,6 +82,11 @@ lazy val pathManager = project.in(file("path-manager"))
     libraryDependencies ++= dependencies,
     dependencyOverrides ++= projectDependencyOverrides,
     excludeDependencies += ExclusionRule(organization = "org.lz4", name = "lz4-java"),
+    // Tests use PlaySpec only, not Play's FluentLenium/Selenium browser helpers.
+    excludeDependencies ++= Seq(
+      ExclusionRule(organization = "io.fluentlenium"),
+      ExclusionRule(organization = "org.seleniumhq.selenium")
+    ),
     Universal / packageName := normalizedName.value,
     Universal/ topLevelDirectory := Some(normalizedName.value),
     Test / testOptions += Tests.Setup(_ => {
@@ -99,6 +104,8 @@ lazy val verifyDependencies = taskKey[Unit]("Reject obsolete LZ4 and require its
 pathManager / verifyDependencies := {
   (pathManager / update).value.configurations.foreach { configuration =>
     val selected = configuration.modules.filterNot(_.evicted).map(_.module)
+    require(!selected.exists(m => Set("io.fluentlenium", "org.seleniumhq.selenium").contains(m.organization)),
+      s"Unused browser test backend in ${configuration.configuration}")
     require(!selected.exists(m => m.organization == "org.lz4" && m.name == "lz4-java"),
       s"Obsolete LZ4 in ${configuration.configuration}")
     if (Set("compile", "runtime", "test").contains(configuration.configuration.name)) {
