@@ -42,6 +42,7 @@ val jackson3Overrides = Seq(
 
 // Both Jackson BOMs use the shared 2.x annotations artifact.
 val projectDependencyOverrides = jacksons ++ pekkoSerializationJacksonOverrides ++ jackson3Overrides ++ Seq(
+  "com.google.guava" % "guava" % "33.7.2-jre",
   "com.fasterxml.jackson.core" % "jackson-annotations" % "2.21"
 )
 
