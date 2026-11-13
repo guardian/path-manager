@@ -42,6 +42,10 @@ val jackson3Overrides = Seq(
 
 // Both Jackson BOMs use the shared 2.x annotations artifact.
 val projectDependencyOverrides = jacksons ++ pekkoSerializationJacksonOverrides ++ jackson3Overrides ++ Seq(
+  "at.yawk.lz4" % "lz4-java" % "1.11.4",
+  "ch.qos.logback" % "logback-classic" % "1.5.34",
+  "ch.qos.logback" % "logback-core" % "1.5.34",
+  "com.google.guava" % "guava" % "33.7.2-jre",
   "com.fasterxml.jackson.core" % "jackson-annotations" % "2.21"
 )
 
@@ -77,6 +81,12 @@ lazy val pathManager = project.in(file("path-manager"))
     playDefaultPort := 10000,
     libraryDependencies ++= dependencies,
     dependencyOverrides ++= projectDependencyOverrides,
+    excludeDependencies += ExclusionRule(organization = "org.lz4", name = "lz4-java"),
+    // Tests use PlaySpec only, not Play's FluentLenium/Selenium browser helpers.
+    excludeDependencies ++= Seq(
+      ExclusionRule(organization = "io.fluentlenium"),
+      ExclusionRule(organization = "org.seleniumhq.selenium")
+    ),
     Universal / packageName := normalizedName.value,
     Universal/ topLevelDirectory := Some(normalizedName.value),
     Test / testOptions += Tests.Setup(_ => {
@@ -88,3 +98,21 @@ lazy val pathManager = project.in(file("path-manager"))
       "docker compose rm --stop --force".!
     }),
   )
+
+lazy val verifyDependencies = taskKey[Unit]("Reject obsolete LZ4 and require its maintained replacement")
+
+pathManager / verifyDependencies := {
+  (pathManager / update).value.configurations.foreach { configuration =>
+    val selected = configuration.modules.filterNot(_.evicted).map(_.module)
+    require(!selected.exists(m => Set("io.fluentlenium", "org.seleniumhq.selenium").contains(m.organization)),
+      s"Unused browser test backend in ${configuration.configuration}")
+    require(!selected.exists(m => m.organization == "org.lz4" && m.name == "lz4-java"),
+      s"Obsolete LZ4 in ${configuration.configuration}")
+    if (Set("compile", "runtime", "test").contains(configuration.configuration.name)) {
+      require(selected.exists(m => m.organization == "at.yawk.lz4" && m.name == "lz4-java" && m.revision == "1.11.4"),
+        s"Missing patched LZ4 in ${configuration.configuration}")
+    }
+  }
+}
+
+pathManager / Test / test := (pathManager / Test / test).dependsOn(pathManager / verifyDependencies).value
