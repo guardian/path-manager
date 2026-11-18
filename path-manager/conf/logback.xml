@@ -26,7 +26,6 @@
     <logger name="controllers" level="DEBUG" />
     <logger name="model" level="DEBUG" />
     <logger name="services" level="DEBUG" />
-    <logger name="controllers" level="DEBUG" />
 
     <root level="INFO">
         <appender-ref ref="ASYNCSTDOUT"/>
